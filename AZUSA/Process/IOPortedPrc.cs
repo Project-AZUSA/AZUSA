@@ -384,6 +384,10 @@ namespace AZUSA
                             {
                                 Internals.Execute(code.Command, code.Argument);
                             }
+                            else
+                            {
+                                Internals.ERROR("Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.");
+                            }
 
                             break;
                     }

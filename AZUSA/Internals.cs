@@ -9,11 +9,12 @@ using System.Threading;
 
 namespace AZUSA
 {
+    // AZUSA 的內部功能
     class Internals
     {
-
         static NotifyIcon notifyIcon = new NotifyIcon();
 
+        //初始化
         static public void INIT()
         {
             //從 DATA 載入所有已儲存的變量
@@ -55,7 +56,7 @@ namespace AZUSA
             //NYAN 指令組的具體內容請看 IOPortedPrc
             if (!ProcessManager.CheckCompleteness())
             {
-                notifyIcon.ShowBalloonTip(1000, "AZUSA", "Some engines are missing. AZUSA will not function unless AI and I/O are all registered.", ToolTipIcon.Error);
+                notifyIcon.ShowBalloonTip(1000, "AZUSA", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.", ToolTipIcon.Error);
             }
 
             //初始化到此結束, 然後就是各 IOPortedPrc 聽取和執行引擎的指令了
