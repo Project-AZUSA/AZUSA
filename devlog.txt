@@ -1,0 +1,21 @@
+﻿
+(中文註解完成)
+
+Issue:
+Combine Definition with the creation of object to avoid double checking
+How should the WAITFORRESP command in old AZUSA be implement?
+String cannot contain quotaion marks as content (MUTAN_SyntaxAnalysis.cs Ln87)
+Bug tracking for script is still very primitive.
+Games and other window application exit with AZUSA, which is not desirable by users. Hence user applications should NOT be started through AZUSA but through a routine or sth.
+
+FAILED====================
+Add decontructors to MUTAN objects, serious mem leaks
+
+adding decontructors proved to be unuseful
+
+RESOLVED==================
+Issue:
+Make sure that all components are ready before executing any actual commands.
+Otherwise the commands that are supposed to be routed will be treated as Routines and cause error.
+
+Make sure that when engines readline they check that the content is not NULL before doing anything substantial, otherwise disastrous error may be caused
