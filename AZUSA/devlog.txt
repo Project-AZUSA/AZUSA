@@ -1,4 +1,6 @@
 ﻿Issue:
+When handling engine exited events try to implement a mechanism to restart individual engines without restarting the whole thing
+Add logging
 Combine Definition with the creation of object to avoid double checking
 How should the WAITFORRESP command in old AZUSA be implement?
 String cannot contain quotaion marks as content (MUTAN_SyntaxAnalysis.cs Ln87)
