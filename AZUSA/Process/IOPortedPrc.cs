@@ -94,8 +94,10 @@ namespace AZUSA
         }
 
         //返回進程的輸入端
-        public StreamWriter Input{
-            get {
+        public StreamWriter Input
+        {
+            get
+            {
                 return Engine.StandardInput;
             }
         }
@@ -135,7 +137,7 @@ namespace AZUSA
         //結束進程, 目前只在 AZUSA 退出時使用到, 所以處理得相對簡單些也沒問題
         public void End()
         {
-            
+
             //首先暫停處理引擎的輸出
             Pause();
 
@@ -376,9 +378,27 @@ namespace AZUSA
 
                             ListCopy = null;
                             break;
+                        //這是讓進程取得當前可用所有端口
+                        case "GetAllPorts":
+                            string result = "";
+                            foreach (IOPortedPrc prc in ProcessManager.GetCurrentProcesses())
+                            {
+
+                                foreach (string port in prc.Ports)
+                                {
+                                    result += port + ",";
+                                }
+                            }
+
+                            Engine.StandardInput.WriteLine(result.Trim(','));
+
+                            //activity log
+                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
+                            break;
                         //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
                         case "GetAIPorts":
-                            string result = "";
+                            result = "";
                             foreach (IOPortedPrc prc in ProcessManager.GetCurrentProcesses())
                             {
                                 if (prc.Type == ProcessType.AI)
