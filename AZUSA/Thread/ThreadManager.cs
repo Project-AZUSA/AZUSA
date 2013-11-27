@@ -23,7 +23,6 @@ namespace AZUSA
         static public void RemoveLoop(LoopThread loop)
         {
             CurrentLoops.Remove(loop);
-            Refresh();
         }
                 
         //中斷現在運行中的所有的線程
@@ -38,8 +37,6 @@ namespace AZUSA
 
             //扔掉 ListCopy
             ListCopy = null;
-
-            Refresh();
             
         }
 
