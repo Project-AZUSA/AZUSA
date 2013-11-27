@@ -28,11 +28,14 @@ namespace AZUSA
             notifyIcon.Visible = true;
 
             //創建圖標右擊菜單的項目
+            MenuItem itmMonitor = new MenuItem("Process Monitor"); //進程監視器
+            itmMonitor.Click += new EventHandler(itmMonitor_Click);
             MenuItem itmRELD = new MenuItem("Reload"); //重新載入
             itmRELD.Click += new EventHandler(itmRELD_Click);
             MenuItem itmEXIT = new MenuItem("Exit"); //退出
             itmEXIT.Click += new EventHandler(itmEXIT_Click);
-            ContextMenu menu = new ContextMenu(new MenuItem[] { itmEXIT, itmRELD });
+            
+            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmEXIT, itmRELD });
 
             //把圖標右擊菜單設成上面創建的菜單
             notifyIcon.ContextMenu = menu;
@@ -60,6 +63,11 @@ namespace AZUSA
             }
 
             //初始化到此結束, 然後就是各 IOPortedPrc 聽取和執行引擎的指令了
+        }
+
+        static void itmMonitor_Click(object sender, EventArgs e)
+        {
+            new Monitor().Show();
         }
 
         static void itmRELD_Click(object sender, EventArgs e)

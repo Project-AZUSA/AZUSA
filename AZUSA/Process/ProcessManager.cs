@@ -54,8 +54,6 @@ namespace AZUSA
         static public void RemoveProcess(IOPortedPrc prc)
         {
             CurrentProcesses.Remove(prc);
-
-            Refresh();
             
             return;
         }
@@ -75,7 +73,6 @@ namespace AZUSA
             //扔掉 ListCopy
             ListCopy = null;
 
-            Refresh();
         }
 
 
@@ -86,6 +83,7 @@ namespace AZUSA
         }
 
         //刷新登錄, 清除掉已退出的進程
+        //**非必要請勿使用, 懷疑使用不當會導致內存泄漏, 具體原因不明
         static public void Refresh()
         {
             List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(CurrentProcesses);
