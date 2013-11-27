@@ -9,18 +9,18 @@ using System.Windows.Forms;
 
 namespace AZUSA
 {
-    public partial class Monitor : Form
+    public partial class LogViewer : Form
     {
-        public Monitor()
+        public LogViewer()
         {
             InitializeComponent();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            listBox.Items.Clear();
-            foreach(IOPortedPrc prc in ProcessManager.GetCurrentProcesses()){
-                listBox.Items.Add("["+prc.Type+"] "+prc.Name); 
+            while (ActivityLog.HasMore())
+            {
+                listBox1.Items.Insert(0, ActivityLog.Next());
             }
         }
     }

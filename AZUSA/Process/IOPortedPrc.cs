@@ -132,7 +132,7 @@ namespace AZUSA
             Engine.BeginOutputReadLine();
         }
 
-        //結束進程
+        //結束進程, 目前只在 AZUSA 退出時使用到, 所以處理得相對簡單些也沒問題
         public void End()
         {
             
@@ -192,7 +192,6 @@ namespace AZUSA
 
             //然後從 ProcessManager 的進程名單中除名
             ProcessManager.RemoveProcess(this);
-            
         }
 
         //對進程自行退出的事件處理
@@ -200,6 +199,23 @@ namespace AZUSA
         {
             //首先暫停處理引擎的輸出
             Pause();
+
+            //如果是負責接口的話
+            if (Ports.Count != 0)
+            {
+                //取消掉所有接口登錄
+                Ports.Clear();
+
+                //通知其他進程接口有變
+                List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
+
+                foreach (IOPortedPrc prc in ListCopy)
+                {
+                    prc.Input.WriteLine("PortHasChanged");
+                }
+
+                ListCopy = null;
+            }
 
             //移除事件監聽
             Engine.OutputDataReceived -= Engine_OutputDataReceived;
@@ -238,6 +254,12 @@ namespace AZUSA
 
             //從 ProcessManager 的進程名單中除名
             ProcessManager.RemoveProcess(this);
+
+            //最後檢查完備性, 如果不完備的話發出通知
+            if (!ProcessManager.CheckCompleteness())
+            {
+                Internals.ERROR("Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.");
+            }
         }
 
         //處理引擎的輸出
@@ -250,6 +272,10 @@ namespace AZUSA
                 return;
             }
 
+            //activity log
+            ActivityLog.Add("From " + Name + ": " + e.Data);
+
+
             //如果是詢問, 則調用 MUTAN 表達式解析器, 並返回結東
             //詢問的語法是 "(表達式)?"
             //First check if the engine is asking a question about value of an expression
@@ -261,6 +287,10 @@ namespace AZUSA
                 //如果格式有誤的話, 會返回 INVALIDEXPR (無效的表達式) 或 IMBALBRACKET (括號不平衡)
                 MUTAN.ExprParser.TryParse(e.Data.TrimEnd('?'), out result);
                 Engine.StandardInput.WriteLine(result);
+
+                //activity log
+                ActivityLog.Add("To " + Name + ": " + result);
+
                 return;
             }
 
@@ -288,13 +318,22 @@ namespace AZUSA
                             ProcessManager.AIPid.Add(pid);
                             ProcessManager.InputPid.Add(pid);
                             ProcessManager.OutputPid.Add(pid);
+                            Internals.MESSAGE("Entered debug mode. AZUSA will now listen to all commands.");
                             break;
                         //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
                         case "GetAzusaPid":
                             Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);
+
+                            //activity log
+                            ActivityLog.Add("To " + Name + ": " + Process.GetCurrentProcess().Id);
+
                             break;
                         //這是讓進程宣佈自己的身份的, 這指令應該是進程完成各種初始化之後才用的
                         case "RegisterAs":
+                            //先記錄現在是否完備
+                            bool tmp = ProcessManager.CheckCompleteness();
+
+                            //然後進行相應的登錄
                             switch (code.Argument)
                             {
                                 case "AI":
@@ -309,16 +348,33 @@ namespace AZUSA
                                     this.Type = ProcessType.Output;
                                     ProcessManager.OutputPid.Add(pid);
                                     break;
-                                case "Routine":
-                                    this.Type = ProcessType.Routine;
-                                    break;
                                 default:
                                     break;
                             }
+
+                            //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
+                            if (!tmp && ProcessManager.CheckCompleteness())
+                            {
+                                Internals.MESSAGE("Engines complete. AZUSA will now listen to all commands.");
+                            }
+
                             break;
                         //這是讓進程宣佈自己的可連接的接口, AZUSA 記錄後可以轉告其他進程, 進程之間可以直接對接而不必經 AZUSA
                         case "RegisterPort":
                             this.Ports.Add(code.Argument);
+
+                            //通知其他進程接口有變
+                            List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
+
+                            foreach (IOPortedPrc prc in ListCopy)
+                            {
+                                prc.Input.WriteLine("PortHasChanged");
+
+                                //activity log
+                                ActivityLog.Add("To " + prc.Name + ": PortHasChanged");
+                            }
+
+                            ListCopy = null;
                             break;
                         //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
                         case "GetAIPorts":
@@ -335,6 +391,10 @@ namespace AZUSA
                             }
 
                             Engine.StandardInput.WriteLine(result.Trim(','));
+
+                            //activity log
+                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
                             break;
                         //這是讓進程取得當前可用的輸入端口(輸入引擎的接口)
                         case "GetInputPorts":
@@ -351,6 +411,10 @@ namespace AZUSA
                             }
 
                             Engine.StandardInput.WriteLine(result.Trim(','));
+
+                            //activity log
+                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
                             break;
                         //這是讓進程取得當前可用的輸出端口(輸出引擎的接口)
                         case "GetOutputPorts":
@@ -367,6 +431,10 @@ namespace AZUSA
                             }
 
                             Engine.StandardInput.WriteLine(result.Trim(','));
+
+                            //activity log
+                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
                             break;
                         //這是讓進程可以宣佈自己責負甚麼函式, AZUSA 在接收到這種函件就會轉發給進程
                         //函式接管不是唯一的, 可以同時有多個進程接管同一個函式, AZUSA 會每個宣告了接管的進程都轉發一遍

@@ -23,27 +23,25 @@ namespace AZUSA
             return AIPid.Count != 0 && InputPid.Count != 0 && OutputPid.Count != 0;
         }
 
-        //創建新進程, name 名字, enginePath 執行檔的路徑, arg 執行參數
-        static public void AddProcess(string name, string enginePath, string arg = "")
+        //創建新進程, name 名字, enginePath 執行檔的路徑, arg 執行參數, 返回是否成功
+        static public bool AddProcess(string name, string enginePath, string arg = "")
         {
             //利用參數, 創建一個新的 IOPortedPrc
             IOPortedPrc prc = new IOPortedPrc(name, enginePath, arg);
 
             //嘗試啟動進程
-            //如果成功, 把進程添加進 CurrentProcesses
-            //如果失敗, 發出錯誤提示
+            //如果成功, 把進程添加進 CurrentProcesses, 返回 true
+            //如果失敗, 返回 false   
             try
             {
                 prc.Start();
                 CurrentProcesses.Add(prc);
+                return true;
             }
             catch
             {
-                Internals.ERROR("Unable to run " + name + ". Please make sure it is in the correct folder.");
-                return;
+                return false;
             }
-
-
         }
 
         //取消進程的登錄

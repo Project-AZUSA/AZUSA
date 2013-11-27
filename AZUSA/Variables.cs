@@ -16,7 +16,7 @@ namespace AZUSA
         static string[] DateTimeVars = new string[] { "Y", "M", "D", "h", "m", "s", "d" };
 
         //線程鎖, 在多線程環境下保護好變量
-        static private object MUTEX= new object();
+        static private object variableMUTEX= new object();
         
         //從檔案讀取變量
         static public void Load(string filePath)
@@ -138,7 +138,7 @@ namespace AZUSA
         static public void Write(string name, string val)
         {
             //先鎖好環境
-            lock (MUTEX)
+            lock (variableMUTEX)
             {
                 //不能寫入內建的日期時間變量
                 //cannot write to date time variables
@@ -156,6 +156,9 @@ namespace AZUSA
                 {
                     storage.Add(name, val);
                 }
+
+                //activity log
+                ActivityLog.Add("Value of " + name + " has been changed to " + val);
             }
         }
 

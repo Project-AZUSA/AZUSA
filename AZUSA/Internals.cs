@@ -30,12 +30,14 @@ namespace AZUSA
             //創建圖標右擊菜單的項目
             MenuItem itmMonitor = new MenuItem("Process Monitor"); //進程監視器
             itmMonitor.Click += new EventHandler(itmMonitor_Click);
+            MenuItem itmActivity = new MenuItem("Activity Monitor"); //活動監視器
+            itmActivity.Click += new EventHandler(itmActivity_Click);
             MenuItem itmRELD = new MenuItem("Reload"); //重新載入
             itmRELD.Click += new EventHandler(itmRELD_Click);
             MenuItem itmEXIT = new MenuItem("Exit"); //退出
             itmEXIT.Click += new EventHandler(itmEXIT_Click);
             
-            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmEXIT, itmRELD });
+            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor,itmActivity, itmEXIT, itmRELD });
 
             //把圖標右擊菜單設成上面創建的菜單
             notifyIcon.ContextMenu = menu;
@@ -43,26 +45,47 @@ namespace AZUSA
             //搜索 Engines\ 底下的所有執行檔, SearchOption.AllDirectories 表示子目錄也在搜索範圍內
             //Start the engines
             string EngPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\Engines";
-            string[] EngList = System.IO.Directory.GetFiles(EngPath, "*.exe", SearchOption.AllDirectories);
+            string[] EngList=new string[]{};
+            if (Directory.Exists(EngPath))
+            {
+                EngList = System.IO.Directory.GetFiles(EngPath, "*.exe", SearchOption.AllDirectories);
+            }
+            else
+            {
+                ERROR("The \\Engines folder is missing. AZUSA will not be able to perform any function without suitable engines.");
+                
+                return;
+            }
 
             //每一個執行檔都添加為引擎
             foreach (string exePath in EngList)
             {
-                ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath);
+                //如果不成功就發錯誤信息
+                if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
+                {
+                    Internals.ERROR("Unable to run " + exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim() + ". Please make sure it is in the correct folder.");       
+                }
             }
 
-            //等待一秒鐘, 讓各引擎做好初始化和登錄
-            System.Threading.Thread.Sleep(1000);
+            //所有引擎啟動成功
+            //等待一段時間後檢查架構是否完備
+            //在時間內沒有完成登錄是不要緊的, 只是 AZUSA 會先行發個提示, 如之後登錄完備了會再發提示
+            System.Threading.Thread.Sleep(1500);
+            
 
-            //一秒後如果 AI, 輸入, 輸出不齊備的話就對用戶作出提示
             //如果引擎不齊備的話, 所有 NYAN 指令組以外的指令不會被執行
             //NYAN 指令組的具體內容請看 IOPortedPrc
-            if (!ProcessManager.CheckCompleteness())
-            {
-                notifyIcon.ShowBalloonTip(1000, "AZUSA", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.", ToolTipIcon.Error);
-            }
+            //if (!ProcessManager.CheckCompleteness())
+            //{
+            //    notifyIcon.ShowBalloonTip(1000, "AZUSA", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.", ToolTipIcon.Error);
+            //}
 
             //初始化到此結束, 然後就是各 IOPortedPrc 聽取和執行引擎的指令了
+        }
+
+        static void itmActivity_Click(object sender, EventArgs e)
+        {
+            new LogViewer().Show();
         }
 
         static void itmMonitor_Click(object sender, EventArgs e)
@@ -106,6 +129,7 @@ namespace AZUSA
             //中止一切線程
             ThreadManager.BreakAll();
 
+            //等待所有線程退出完成
             while (ThreadManager.GetCurrentLoops().Count != 0)
             {
             }
@@ -264,10 +288,16 @@ namespace AZUSA
                                 if (prc.RIDs[cmd])
                                 {
                                     prc.Input.WriteLine(arg);
+
+                                    //activity log
+                                    ActivityLog.Add("To " + prc.Name + ": " + arg);
                                 }
                                 else
                                 {
                                     prc.Input.WriteLine(cmd + "(" + arg + ")");
+
+                                    //activity log
+                                    ActivityLog.Add("To " + prc.Name + ": " + cmd + "(" + arg + ")");
                                 }
                             }
                         }
