@@ -76,6 +76,22 @@ namespace AZUSA
 
         }
 
+        //對進程進行廣播
+        static public void Broadcast(string msg)
+        {            
+            List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
+
+            foreach (IOPortedPrc prc in ListCopy)
+            {
+                prc.Input.WriteLine(msg);
+
+                //activity log
+                ActivityLog.Add("To " + prc.Name + ": "+msg);
+            }
+
+            ListCopy = null;
+        }
+
 
         //返回現在執行中的所有進程
         static public List<IOPortedPrc> GetCurrentProcesses()

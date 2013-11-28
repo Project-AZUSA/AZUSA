@@ -239,6 +239,8 @@ namespace AZUSA
                                 //等待回應
                                 case "WAITFORRESP":
                                     Variables.Write("$WAITFORRESP", "TRUE");
+                                    //通知引擎 (主要是針對 AI) 現在正等待回應
+                                    ProcessManager.Broadcast("WaitingForResp");
                                     while(Convert.ToBoolean(Variables.Read("$WAITFORRESP"))){}
                                     break;
                                 //一般其他指令
@@ -269,6 +271,10 @@ namespace AZUSA
                 // MSG({expr}) 發送信息
                 case "MSG":
                     MESSAGE(arg);
+                    break;
+                // BROADCAST({expr}) 向所有引擎廣播消息
+                case "BROADCAST":
+                    ProcessManager.Broadcast(arg);
                     break;
                 // EXIT() 退出程序
                 case "EXIT":

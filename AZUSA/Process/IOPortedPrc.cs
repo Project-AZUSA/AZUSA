@@ -397,18 +397,7 @@ namespace AZUSA
                         case "RegisterPort":
                             this.Ports.Add(code.Argument);
 
-                            //通知其他進程接口有變
-                            List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
-
-                            foreach (IOPortedPrc prc in ListCopy)
-                            {
-                                prc.Input.WriteLine("PortHasChanged");
-
-                                //activity log
-                                ActivityLog.Add("To " + prc.Name + ": PortHasChanged");
-                            }
-
-                            ListCopy = null;
+                            ProcessManager.Broadcast("PortHasChanged");
                             break;
                         //這是讓進程取得當前可用所有端口
                         case "GetAllPorts":
