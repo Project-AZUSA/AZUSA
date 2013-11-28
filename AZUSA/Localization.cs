@@ -23,7 +23,7 @@ namespace AZUSA
         {
             if (Variables.Exist("SYS_" + CurrentLanguage + "_" + ID))
             {
-                return Variables.Read("SYS_" + CurrentLanguage + "_" + ID).Replace("{arg}",arg);
+                return Variables.Read("SYS_" + CurrentLanguage + "_" + ID).Replace("{arg}",arg).Trim('"');
             }
             else
             {

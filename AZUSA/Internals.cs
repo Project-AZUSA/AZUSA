@@ -24,6 +24,8 @@ namespace AZUSA
             //Load all the variables            
             Variables.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\DATA");
 
+            //載入提示信息
+            Localization.Initialize();
 
             //創建提示圖標
             //Set up notify icon
@@ -150,13 +152,19 @@ namespace AZUSA
         //發出錯誤提示
         static public void ERROR(string msg)
         {
-            notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Error);
+            if (msg != "")
+            {
+                notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Error);
+            }
         }
 
         //發出普通提示
         static public void MESSAGE(string msg)
         {
-            notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Info);
+            if (msg != "")
+            {
+                notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Info);
+            }
         }
 
 
@@ -334,7 +342,10 @@ namespace AZUSA
                     if (!routed)
                     {
                         //否則的話就當成函式呼叫
-                        ProcessManager.AddProcess(cmd, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Routines\" + cmd, arg);
+                        if (!ProcessManager.AddProcess(cmd, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Routines\" + cmd, arg))
+                        {
+                            Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
+                        }
                     }
                     break;
             }
