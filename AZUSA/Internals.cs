@@ -14,6 +14,9 @@ namespace AZUSA
     {
         static NotifyIcon notifyIcon = new NotifyIcon();
 
+        //記錄圖標是否被點擊, 利用這個變量可以透過圖標跟用戶進行簡單的交互
+        static public bool Clicked = false;
+
         //初始化
         static public void INIT()
         {
@@ -26,6 +29,7 @@ namespace AZUSA
             //Set up notify icon
             notifyIcon.Icon = AZUSA.Properties.Resources.icon;
             notifyIcon.Visible = true;
+            notifyIcon.DoubleClick += new EventHandler(notifyIcon_DoubleClick);
 
             //創建圖標右擊菜單的項目
             MenuItem itmMonitor = new MenuItem("Process Monitor"); //進程監視器
@@ -81,6 +85,11 @@ namespace AZUSA
             //}
 
             //初始化到此結束, 然後就是各 IOPortedPrc 聽取和執行引擎的指令了
+        }
+
+        static void notifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            Clicked = true;
         }
 
         static void itmActivity_Click(object sender, EventArgs e)

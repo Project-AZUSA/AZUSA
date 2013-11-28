@@ -21,11 +21,17 @@ namespace AZUSA
         //pid 每個進程的惟一的 ID
         public int pid;
 
+        //進程的路徑, 重啟用
+        string path;
+
         //進程的實體
         Process Engine;
 
         //進程的類別
         public ProcessType Type;
+
+        //進程是否應用程序
+        public bool IsApplication=false;
 
         //進程可以向 AZUSA 登錄開放的接口位置 (TCP)
         //然後 AZUSA 記錄在 Ports, 有需要時向其他進程通報
@@ -43,6 +49,9 @@ namespace AZUSA
             //名字
             Name = name;
 
+            //路徑
+            path = enginePath;
+
             //在進程沒有進一步宣告前先假定其為 Routine
             //default type is Routine until the Engine self-identifies itself
             Type = ProcessType.Routine;
@@ -50,11 +59,11 @@ namespace AZUSA
             //這裡是創建進程實體的部分
             //specifies the way the recognizer is run
             Engine = new Process();
-            Engine.StartInfo.FileName = enginePath;
+            Engine.StartInfo.FileName = path;
             Engine.StartInfo.Arguments = arg;
 
             //把進程的工作路徑設成進程本身的路徑, 而不是預設的 AZUSA 的路徑
-            Engine.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(enginePath);
+            Engine.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(path);
 
             //這三行會讓進程被隱藏起來
             //如果不進行隱藏的話, AZUSA 是不能接管其輸入輸出
@@ -241,8 +250,31 @@ namespace AZUSA
                 ProcessManager.OutputPid.Remove(pid);
             }
 
+            //從 ProcessManager 的進程名單中除名
+            ProcessManager.RemoveProcess(this);
+
+            //如果是主要引擎的話,詢問用戶是否重啟,5秒內沒回應就作罷
+            if (Type != ProcessType.Routine && !IsApplication)
+            {
+                Internals.Clicked = false;
+
+                Internals.ERROR(Name+ " has exited unexpectedly. Double-click the notify icon to restart the engine, or ignore this message otherwise.");
+
+                int starttime = DateTime.Now.Minute*60+DateTime.Now.Second;
+                while (DateTime.Now.Minute * 60 + DateTime.Now.Second - starttime < 5)
+                {
+                    if (Internals.Clicked)
+                    {
+                        ProcessManager.AddProcess(Name, path);
+                        Internals.Clicked = false;
+                        break;
+                    }
+                }
+            }
+
             //釋放變量佔用的資源
             Name = null;
+            path = null;
             if (Ports != null)
             {
                 Ports.Clear();
@@ -253,9 +285,6 @@ namespace AZUSA
                 RIDs.Clear();
                 RIDs = null;
             }
-
-            //從 ProcessManager 的進程名單中除名
-            ProcessManager.RemoveProcess(this);
 
             //最後檢查完備性, 如果不完備的話發出通知
             if (!ProcessManager.CheckCompleteness())
@@ -350,6 +379,9 @@ namespace AZUSA
                                     this.Type = ProcessType.Output;
                                     ProcessManager.OutputPid.Add(pid);
                                     break;
+                                case "Application":
+                                    this.IsApplication = true;
+                                    break;
                                 default:
                                     break;
                             }
@@ -357,7 +389,7 @@ namespace AZUSA
                             //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
                             if (!tmp && ProcessManager.CheckCompleteness())
                             {
-                                Internals.MESSAGE("Engines complete. AZUSA will now listen to all commands.");
+                                Internals.MESSAGE("Engines are complete. AZUSA will now listen to all commands.");
                             }
 
                             break;

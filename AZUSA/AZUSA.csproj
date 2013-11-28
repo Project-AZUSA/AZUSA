@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="ActivityLog.cs" />
     <Compile Include="AZUSAAppContext.cs" />
+    <Compile Include="Localization.cs" />
     <Compile Include="LogViewer.cs">
       <SubType>Form</SubType>
     </Compile>

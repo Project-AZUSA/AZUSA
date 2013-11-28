@@ -65,7 +65,10 @@ namespace AZUSA
 
             foreach (IOPortedPrc prc in ListCopy)
             {
-                prc.End();
+                if (!prc.IsApplication)
+                {
+                    prc.End();
+                }
             }
 
             //扔掉 ListCopy
