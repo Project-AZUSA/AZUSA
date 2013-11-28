@@ -71,20 +71,9 @@ namespace AZUSA
                 }
             }
 
-            //所有引擎啟動成功
-            //等待一段時間後檢查架構是否完備
-            //在時間內沒有完成登錄是不要緊的, 只是 AZUSA 會先行發個提示, 如之後登錄完備了會再發提示
-            System.Threading.Thread.Sleep(1500);
+            //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
+            MESSAGE("AZUSA is ready. Waiting for engines to initialize...");
             
-
-            //如果引擎不齊備的話, 所有 NYAN 指令組以外的指令不會被執行
-            //NYAN 指令組的具體內容請看 IOPortedPrc
-            //if (!ProcessManager.CheckCompleteness())
-            //{
-            //    notifyIcon.ShowBalloonTip(1000, "AZUSA", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.", ToolTipIcon.Error);
-            //}
-
-            //初始化到此結束, 然後就是各 IOPortedPrc 聽取和執行引擎的指令了
         }
 
         static void notifyIcon_DoubleClick(object sender, EventArgs e)
@@ -241,9 +230,26 @@ namespace AZUSA
                     {
                         foreach (MUTAN.ReturnCode code in obj.Run())
                         {
-                            Execute(code.Command, code.Argument);
-                        }
+                            //腳本有特殊語法
+                            switch (code.Command)
+                            {
+                                //中止執行
+                                case "END":
+                                    goto END;
+                                //等待回應
+                                case "WAITFORRESP":
+                                    Variables.Write("$WAITFORRESP", "TRUE");
+                                    while(Convert.ToBoolean(Variables.Read("$WAITFORRESP"))){}
+                                    break;
+                                //一般其他指令
+                                default:
+                                    Execute(code.Command, code.Argument);
+                                    break;
+                            }
 
+                           
+                        }
+                    END:
                         //扔掉物件
                         obj = null;
                     }
