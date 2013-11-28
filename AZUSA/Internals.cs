@@ -56,7 +56,7 @@ namespace AZUSA
             }
             else
             {
-                ERROR("The \\Engines folder is missing. AZUSA will not be able to perform any function without suitable engines.");
+                ERROR(Localization.GetMessage("ENGPATHMISSING","The \\Engines folder is missing. AZUSA will not be able to perform any function without suitable engines."));
                 
                 return;
             }
@@ -67,12 +67,12 @@ namespace AZUSA
                 //如果不成功就發錯誤信息
                 if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
                 {
-                    Internals.ERROR("Unable to run " + exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim() + ". Please make sure it is in the correct folder.");       
+                    Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL","Unable to run {arg}. Please make sure it is in the correct folder.",exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));       
                 }
             }
 
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
-            MESSAGE("AZUSA is ready. Waiting for engines to initialize...");
+            MESSAGE(Localization.GetMessage("AZUSAREADY","AZUSA is ready. Waiting for engines to initialize..."));
             
         }
 
@@ -205,7 +205,7 @@ namespace AZUSA
                     }
                     catch
                     {
-                        Internals.ERROR("Unable to find the script named " + scr[0] + ". Please make sure it is in the correct folder.");
+                        Internals.ERROR(Localization.GetMessage("SCRMISSING","Unable to find the script named {arg}. Please make sure it is in the correct folder.",scr[0]));
                         return;
                     }
 
@@ -257,7 +257,7 @@ namespace AZUSA
                     }
                     else
                     {
-                        ERROR("An error occured while running script named " + scr[0] + ". Please make sure there is no syntax error.");
+                        ERROR(Localization.GetMessage("SCRERROR","An error occured while running script named {arg}. Please make sure there is no syntax error.",scr[0]));
                     }
                     break;
                 // WAIT({int}) 暫停線程

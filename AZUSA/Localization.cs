@@ -5,15 +5,30 @@ using System.Text;
 
 namespace AZUSA
 {
-    //負責存放不同語言的提示, 用戶可以在 Data 自定義語言和相應的信息內容
+    //負責提取不同語言的系統提示, 用戶可以在 Data 自定義語言和相應的信息內容
     
-    //TO-DO: 
-    //Check variables of the form
-    //If not exists use default values
-    //default lang= english
-    //SYS_LANG = EN
-    //SYS_EN_DEBUGMSG
-    class Localization
+    static class Localization
     {
+        public static string CurrentLanguage = "EN";
+
+        public static void Initialize()
+        {
+            if (Variables.Exist("SYS_LANG"))
+            {
+                CurrentLanguage = Variables.Read("SYS_LANG");
+            }
+        }
+
+        public static string GetMessage(string ID, string Default, string arg="")
+        {
+            if (Variables.Exist("SYS_" + CurrentLanguage + "_" + ID))
+            {
+                return Variables.Read("SYS_" + CurrentLanguage + "_" + ID).Replace("{arg}",arg);
+            }
+            else
+            {
+                return Default.Replace("{arg}", arg);
+            }
+        }
     }
 }

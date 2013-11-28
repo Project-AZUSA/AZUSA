@@ -258,7 +258,7 @@ namespace AZUSA
             {
                 Internals.Clicked = false;
 
-                Internals.ERROR(Name+ " has exited unexpectedly. Double-click the notify icon to restart the engine, or ignore this message otherwise.");
+                Internals.ERROR(Name+ Localization.GetMessage("ENGINEEXIT"," has exited unexpectedly. Double-click the notify icon to restart the engine, or ignore this message otherwise."));
 
                 int starttime = DateTime.Now.Minute*60+DateTime.Now.Second;
                 while (DateTime.Now.Minute * 60 + DateTime.Now.Second - starttime < 5)
@@ -289,7 +289,7 @@ namespace AZUSA
             //最後檢查完備性, 如果不完備的話發出通知
             if (!ProcessManager.CheckCompleteness())
             {
-                Internals.ERROR("Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.");
+                Internals.ERROR(Localization.GetMessage("ENGINEMISSING","Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered."));
             }
         }
 
@@ -349,7 +349,7 @@ namespace AZUSA
                             ProcessManager.AIPid.Add(pid);
                             ProcessManager.InputPid.Add(pid);
                             ProcessManager.OutputPid.Add(pid);
-                            Internals.MESSAGE("Entered debug mode. AZUSA will now listen to all commands.");
+                            Internals.MESSAGE(Localization.GetMessage("DEBUG","Entered debug mode. AZUSA will now listen to all commands."));
                             break;
                         //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
                         case "GetAzusaPid":
@@ -389,7 +389,7 @@ namespace AZUSA
                             //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
                             if (!tmp && ProcessManager.CheckCompleteness())
                             {
-                                Internals.MESSAGE("Engines are complete. AZUSA will now listen to all commands.");
+                                Internals.MESSAGE(Localization.GetMessage("ENGINECOMPLETE","Engines are complete. AZUSA will now listen to all commands."));
                             }
 
                             break;
@@ -495,7 +495,7 @@ namespace AZUSA
                             }
                             else
                             {
-                                Internals.ERROR("Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered.");
+                                Internals.ERROR(Localization.GetMessage("ENGINEMISSING", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered."));
                             }
 
                             break;

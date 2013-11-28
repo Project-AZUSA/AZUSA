@@ -80,7 +80,7 @@ namespace AZUSA
                 //失敗的話就回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", expr + " is not a valid expression (Trying to set " + ID + " to " + expr + ".)") };
+                    return new ReturnCode[] { new ReturnCode("ERR", expr + Localization.GetMessage("INVALIDEXPR"," is not a valid expression.")+" [MUTAN, " + ID + "=" + expr + "]") };
                 }
 
             }
@@ -125,7 +125,7 @@ namespace AZUSA
                 //如果失敗的話就回傳錯誤信息
                 if (!ExprParser.TryParse(arg, out val))
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", arg + " is not a valid expression. (Trying to run " + RID + "(" + arg + ").)") };
+                    return new ReturnCode[] { new ReturnCode("ERR", arg + Localization.GetMessage("INVALIDEXPR"," is not a valid expression.")+"[MUTAN, " + RID + "(" + arg + ")]") };
                 }
 
                 //否則就回傳函數名和參數
@@ -238,13 +238,13 @@ namespace AZUSA
                     //否則回傳錯誤信息
                     else
                     {
-                        return new ReturnCode[] { new ReturnCode("ERR", condition + " is not a valid boolean.(" + check + ")") };
+                        return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDBOOL"," is not a valid boolean.")+" [MUTAN, " + check + "]") };
                     }
                 }
                 //如果不是合法表達式則回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", condition + " is not a valid expression.(" + check + ")") };
+                    return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDEXPR"," is not a valid expression.")+" [MUTAN, " + check + "]") };
                 }
             }
         }
@@ -444,13 +444,13 @@ namespace AZUSA
                     //如果不是布林值, 回傳錯誤信息
                     else
                     {
-                        return new ReturnCode[] { new ReturnCode("ERR", condition + " is not a valid boolean.(" + check + ")") };
+                        return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDBOOL", " is not a valid boolean.") + " [MUTAN, " + check + "]") };
                     }
                 }
                 //如果無法運算, 回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", condition + " is not a valid expression.(" + check + ")") };
+                    return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + check + "]") };
                 }
             }
         }

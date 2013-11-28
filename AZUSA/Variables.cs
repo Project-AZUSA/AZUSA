@@ -50,7 +50,7 @@ namespace AZUSA
                     catch
                     {
                         //如果解析失敗代表格式有問題
-                        Internals.ERROR("Ill-formatted data in line " + numLine.ToString() + "of " + filePath);
+                        Internals.ERROR(Localization.GetMessage("ILLFORMAT","Ill-formatted data in line {arg}" ,numLine.ToString()) + " [" + filePath+"]");
                     }
 
                     //更新當前行數
