@@ -26,6 +26,7 @@ namespace AZUSA
         //檢查引擎是否完備, 如果 AI, 輸入, 輸出 三者俱備才會返回 true
         static public bool CheckCompleteness()
         {
+            if (Internals.Debugging) { return true; }
             return AIPid.Count != 0 && InputPid.Count != 0 && OutputPid.Count != 0;
         }
 

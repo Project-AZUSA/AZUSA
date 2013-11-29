@@ -14,6 +14,8 @@ namespace AZUSA
     {
         static NotifyIcon notifyIcon = new NotifyIcon();
 
+        static public bool Debugging = false;
+
         //記錄圖標是否被點擊, 利用這個變量可以透過圖標跟用戶進行簡單的交互
         static public bool Clicked = false;
 

@@ -335,11 +335,9 @@ namespace AZUSA
                     //Handle NYAN protocol related commands, leave the rest to AZUSA internals
                     switch (code.Command)
                     {
-                        //這是除錯用的, 請無視
-                        case "Debugging":
-                            ProcessManager.AIPid.Add(pid);
-                            ProcessManager.InputPid.Add(pid);
-                            ProcessManager.OutputPid.Add(pid);
+                        //這是用來進入除錯模式的, 除錯模式下不會要求完備性
+                        case "Debugging":                            
+                            Internals.Debugging = true;
                             Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
                             break;
                         //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
