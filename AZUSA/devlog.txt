@@ -1,6 +1,7 @@
 ﻿Issue:
 Combine Definition with the creation of object to avoid double checking
 Bug tracking for script is still very primitive.
+Allow routines to return values as the argument of another routine? (not necessary but convenient)
 Games and other window application exit with AZUSA, which is not desirable by users. Hence user applications should NOT be started through AZUSA but through a routine or sth.
 
 
