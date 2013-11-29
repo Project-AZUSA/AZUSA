@@ -13,8 +13,8 @@ namespace AZUSA
         static Dictionary<string, string> storage = new Dictionary<string, string>();
 
         //線程鎖, 在多線程環境下保護好變量
-        static private object variableMUTEX= new object();
-        
+        static private object variableMUTEX = new object();
+
         //從檔案讀取變量
         static public void Load(string filePath)
         {
@@ -47,7 +47,7 @@ namespace AZUSA
                     catch
                     {
                         //如果解析失敗代表格式有問題
-                        Internals.ERROR(Localization.GetMessage("ILLFORMAT","Ill-formatted data in line {arg}" ,numLine.ToString()) + " [" + filePath+"]");
+                        Internals.ERROR(Localization.GetMessage("ILLFORMAT", "Ill-formatted data in line {arg}", numLine.ToString()) + " [" + filePath + "]");
                     }
 
                     //更新當前行數
@@ -68,7 +68,7 @@ namespace AZUSA
             //如果檔案已經存在, 要先讀取一下已有的檔案, 把有誤的內容更新, 把原來的其他內容保存
             if (File.Exists(filePath))
             {
-               
+
                 //暫存解析結果
                 string[] parsed;
                 string ID;
@@ -127,7 +127,7 @@ namespace AZUSA
             }
 
             //最後以 UTF8 編碼寫入
-            File.WriteAllLines(filePath, newConfig.ToArray(),Encoding.UTF8);
+            File.WriteAllLines(filePath, newConfig.ToArray(), Encoding.UTF8);
 
         }
 
@@ -137,8 +137,8 @@ namespace AZUSA
             //先鎖好環境
             lock (variableMUTEX)
             {
-                //不能寫入內建的日期時間變量
-                if (name.StartsWith("{")&&name.EndsWith("}"))
+                //不能寫入內建的特殊變量
+                if (name.StartsWith("{") && name.EndsWith("}"))
                 {
                     return;
                 }
@@ -161,9 +161,9 @@ namespace AZUSA
         //檢查變量是否存在
         static public bool Exist(string name)
         {
-            //如是日期時間變量就返回 true
+            //如是特殊變量, 且不含加號(這是為了避免 {%h} + : + {%m} 被理解成 { %h}+:+{%m } 就返回 true
             //interrupt for date time variables
-            if (name.StartsWith("{") && name.EndsWith("}")) { return true; }
+            if (name.StartsWith("{") && name.EndsWith("}") && !name.Contains('+')) { return true; }
             //否則就返回是否環境是否存在這變量
             return storage.ContainsKey(name);
         }
@@ -171,12 +171,20 @@ namespace AZUSA
         //讀取變量
         static public string Read(string name)
         {
-            //如果讀取的是日期時間的話就返回相應的值, 否則就返回變量環境裡的值
-            //interrupt with date time variables
-            if (name.StartsWith("{") && name.EndsWith("}")){
+            //因為字串內出現引號會導致解析錯誤, 所以定義了特殊變量
+            if (name == "{QUOT}")
+            {
+                return "\"";
+            //日期時間
+            }
+            else if (name.StartsWith("{") && name.EndsWith("}"))
+            {
                 return DateTime.Now.ToString(name.TrimStart('{').TrimEnd('}'));
-            }else{
-                    return storage[name];                    
+            //否則就返回變量環境裡的值
+            }
+            else
+            {
+                return storage[name];
             }
 
 

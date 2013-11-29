@@ -344,9 +344,14 @@ namespace AZUSA
                         //否則的話就當成函式呼叫, 先找 exe
                         if (!ProcessManager.AddProcess(cmd, Environment.CurrentDirectory + @"\Routines\" + cmd+".exe", arg))
                         {
-                            //再找 bat
+                            //再找 bat (利用 bat 可以呼叫基本上任何直譯器調用任何腳本語言了)
                             if(File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat")){
-                                ProcessManager.AddProcess(cmd, "cmd.exe","/C \""+Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\"");
+                                ProcessManager.AddProcess(cmd, "cmd.exe","/C \""+Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" "+arg);
+                            //再找 vbs
+                            }
+                            else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
+                            {
+                                ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
                             //都找不到就報錯
                             }else{                            
                                 Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
