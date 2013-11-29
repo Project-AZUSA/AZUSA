@@ -20,7 +20,7 @@ namespace AZUSA
         {
             listBox.Items.Clear();
             foreach(IOPortedPrc prc in ProcessManager.GetCurrentProcesses()){
-                listBox.Items.Add("["+prc.Type+"] "+prc.Name); 
+                listBox.Items.Add("["+prc.currentType+"] "+prc.Name); 
             }
         }
     }

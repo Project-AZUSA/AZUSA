@@ -7,8 +7,7 @@ using System.IO;
 
 namespace AZUSA
 {
-    //進程類型
-    enum ProcessType { Input, Output, AI, Routine }
+
 
 
     //進程類
@@ -27,15 +26,15 @@ namespace AZUSA
         //進程的實體
         Process Engine;
 
-        //進程的類別
-        public ProcessType Type;
-
         //進程是否應用程序
-        public bool IsApplication=false;
+        public bool IsApplication = false;
 
-        //進程可以向 AZUSA 登錄開放的接口位置 (TCP)
-        //然後 AZUSA 記錄在 Ports, 有需要時向其他進程通報
-        public List<string> Ports = new List<string>();
+        //進程目前的類型
+        public PortType currentType = PortType.Unknown;
+
+        //進程負責的接口
+        List<string> Ports = new List<string>();
+
 
         //進程可以接管指令
         //RIDs 記錄的是進程接管的指令
@@ -51,10 +50,6 @@ namespace AZUSA
 
             //路徑
             path = enginePath;
-
-            //在進程沒有進一步宣告前先假定其為 Routine
-            //default type is Routine until the Engine self-identifies itself
-            Type = ProcessType.Routine;
 
             //這裡是創建進程實體的部分
             //specifies the way the recognizer is run
@@ -175,26 +170,21 @@ namespace AZUSA
             }
 
             //退出順利後檢查引擎類型, 再從 ProcessManager 相應的名單中除名
-            if (Type == ProcessType.AI)
+            if (ProcessManager.AIPid.Contains(pid))
             {
                 ProcessManager.AIPid.Remove(pid);
             }
-            else if (Type == ProcessType.Input)
+            if (ProcessManager.InputPid.Contains(pid))
             {
                 ProcessManager.InputPid.Remove(pid);
             }
-            else if (Type == ProcessType.Output)
+            if (ProcessManager.OutputPid.Contains(pid))
             {
                 ProcessManager.OutputPid.Remove(pid);
             }
 
             //釋放變量佔用的資源
             Name = null;
-            if (Ports != null)
-            {
-                Ports.Clear();
-                Ports = null;
-            }
             if (RIDs != null)
             {
                 RIDs.Clear();
@@ -214,6 +204,12 @@ namespace AZUSA
             //如果是負責接口的話
             if (Ports.Count != 0)
             {
+                foreach (string port in Ports)
+                {
+                    //取消掉所有接口登錄
+                    ProcessManager.Ports.Remove(port);
+                }
+
                 //取消掉所有接口登錄
                 Ports.Clear();
 
@@ -237,15 +233,15 @@ namespace AZUSA
             Engine = null;
 
             //然後檢查引擎類型, 再從 ProcessManager 相應的名單中除名
-            if (Type == ProcessType.AI)
+            if (ProcessManager.AIPid.Contains(pid))
             {
                 ProcessManager.AIPid.Remove(pid);
             }
-            else if (Type == ProcessType.Input)
+            if (ProcessManager.InputPid.Contains(pid))
             {
                 ProcessManager.InputPid.Remove(pid);
             }
-            else if (Type == ProcessType.Output)
+            if (ProcessManager.OutputPid.Contains(pid))
             {
                 ProcessManager.OutputPid.Remove(pid);
             }
@@ -254,13 +250,13 @@ namespace AZUSA
             ProcessManager.RemoveProcess(this);
 
             //如果是主要引擎的話,詢問用戶是否重啟,5秒內沒回應就作罷
-            if (Type != ProcessType.Routine && !IsApplication)
+            if (currentType != PortType.Unknown && !IsApplication)
             {
                 Internals.Clicked = false;
 
-                Internals.ERROR(Name+ Localization.GetMessage("ENGINEEXIT"," has exited unexpectedly. Double-click the notify icon to restart the engine, or ignore this message otherwise."));
+                Internals.ERROR(Name + Localization.GetMessage("ENGINEEXIT", " has exited unexpectedly. Double-click the notify icon to restart the engine, or ignore this message otherwise."));
 
-                int starttime = DateTime.Now.Minute*60+DateTime.Now.Second;
+                int starttime = DateTime.Now.Minute * 60 + DateTime.Now.Second;
                 while (DateTime.Now.Minute * 60 + DateTime.Now.Second - starttime < 5)
                 {
                     if (Internals.Clicked)
@@ -275,11 +271,6 @@ namespace AZUSA
             //釋放變量佔用的資源
             Name = null;
             path = null;
-            if (Ports != null)
-            {
-                Ports.Clear();
-                Ports = null;
-            }
             if (RIDs != null)
             {
                 RIDs.Clear();
@@ -289,7 +280,7 @@ namespace AZUSA
             //最後檢查完備性, 如果不完備的話發出通知
             if (!ProcessManager.CheckCompleteness())
             {
-                Internals.ERROR(Localization.GetMessage("ENGINEMISSING","Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered."));
+                Internals.ERROR(Localization.GetMessage("ENGINEMISSING", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered."));
             }
         }
 
@@ -349,7 +340,7 @@ namespace AZUSA
                             ProcessManager.AIPid.Add(pid);
                             ProcessManager.InputPid.Add(pid);
                             ProcessManager.OutputPid.Add(pid);
-                            Internals.MESSAGE(Localization.GetMessage("DEBUG","Entered debug mode. AZUSA will now listen to all commands."));
+                            Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
                             break;
                         //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
                         case "GetAzusaPid":
@@ -368,15 +359,15 @@ namespace AZUSA
                             switch (code.Argument)
                             {
                                 case "AI":
-                                    this.Type = ProcessType.AI;
+                                    currentType = PortType.AI;
                                     ProcessManager.AIPid.Add(pid);
                                     break;
                                 case "Input":
-                                    this.Type = ProcessType.Input;
+                                    currentType = PortType.Input;
                                     ProcessManager.InputPid.Add(pid);
                                     break;
                                 case "Output":
-                                    this.Type = ProcessType.Output;
+                                    currentType = PortType.Output;
                                     ProcessManager.OutputPid.Add(pid);
                                     break;
                                 case "Application":
@@ -389,28 +380,23 @@ namespace AZUSA
                             //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
                             if (!tmp && ProcessManager.CheckCompleteness())
                             {
-                                Internals.MESSAGE(Localization.GetMessage("ENGINECOMPLETE","Engines are complete. AZUSA will now listen to all commands."));
+                                Internals.MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
                             }
 
                             break;
                         //這是讓進程宣佈自己的可連接的接口, AZUSA 記錄後可以轉告其他進程, 進程之間可以直接對接而不必經 AZUSA
                         case "RegisterPort":
+                            ProcessManager.Ports.Add(code.Argument, currentType);
                             this.Ports.Add(code.Argument);
-
                             ProcessManager.Broadcast("PortHasChanged");
                             break;
                         //這是讓進程取得當前可用所有端口
                         case "GetAllPorts":
                             string result = "";
-                            foreach (IOPortedPrc prc in ProcessManager.GetCurrentProcesses())
+                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                             {
-
-                                foreach (string port in prc.Ports)
-                                {
-                                    result += port + ",";
-                                }
+                                result += port.Key + ",";
                             }
-
                             Engine.StandardInput.WriteLine(result.Trim(','));
 
                             //activity log
@@ -420,14 +406,13 @@ namespace AZUSA
                         //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
                         case "GetAIPorts":
                             result = "";
-                            foreach (IOPortedPrc prc in ProcessManager.GetCurrentProcesses())
+                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                             {
-                                if (prc.Type == ProcessType.AI)
+                                if (port.Value == PortType.AI)
                                 {
-                                    foreach (string port in prc.Ports)
-                                    {
-                                        result += port + ",";
-                                    }
+
+                                    result += port.Key + ",";
+
                                 }
                             }
 
@@ -440,14 +425,13 @@ namespace AZUSA
                         //這是讓進程取得當前可用的輸入端口(輸入引擎的接口)
                         case "GetInputPorts":
                             result = "";
-                            foreach (IOPortedPrc prc in ProcessManager.GetCurrentProcesses())
+                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                             {
-                                if (prc.Type == ProcessType.Input)
+                                if (port.Value == PortType.Input)
                                 {
-                                    foreach (string port in prc.Ports)
-                                    {
-                                        result += port + ",";
-                                    }
+
+                                    result += port.Key + ",";
+
                                 }
                             }
 
@@ -460,14 +444,13 @@ namespace AZUSA
                         //這是讓進程取得當前可用的輸出端口(輸出引擎的接口)
                         case "GetOutputPorts":
                             result = "";
-                            foreach (IOPortedPrc prc in ProcessManager.GetCurrentProcesses())
+                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                             {
-                                if (prc.Type == ProcessType.Output)
+                                if (port.Value == PortType.Output)
                                 {
-                                    foreach (string port in prc.Ports)
-                                    {
-                                        result += port + ",";
-                                    }
+
+                                    result += port.Key + ",";
+
                                 }
                             }
 

@@ -6,11 +6,17 @@ using System.Diagnostics;
 
 namespace AZUSA
 {
+    //進程類型
+    enum PortType { Input, Output, AI , Unknown}
+
     //進程管理員
     static class ProcessManager
     {
         //現在運行中的進程
         static List<IOPortedPrc> CurrentProcesses = new List<IOPortedPrc>();
+
+        //所有已登錄的端口
+        static public Dictionary<string, PortType> Ports=new Dictionary<string,PortType>();
 
         //AI, 輸入, 輸出 引擎的 Pid
         static public List<int> AIPid = new List<int>();
