@@ -155,11 +155,11 @@ namespace AZUSA
                     }
                     else if (IsExec(parts[i]))
                     {
-                        basics[i] = new exec(parts[i]);
+                        basics[i] = new exec(parts[i].Trim());
                     }
                     else
                     {
-                        basics[i] = new decla(parts[i]);
+                        basics[i] = new decla(parts[i].Trim());
                     }
                 }
 

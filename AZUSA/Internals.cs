@@ -341,10 +341,16 @@ namespace AZUSA
                     //No need to continue executing the command because it has been routed already
                     if (!routed)
                     {
-                        //否則的話就當成函式呼叫
-                        if (!ProcessManager.AddProcess(cmd, Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Routines\" + cmd, arg))
+                        //否則的話就當成函式呼叫, 先找 exe
+                        if (!ProcessManager.AddProcess(cmd, Environment.CurrentDirectory + @"\Routines\" + cmd+".exe", arg))
                         {
-                            Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
+                            //再找 bat
+                            if(File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat")){
+                                ProcessManager.AddProcess(cmd, "cmd.exe","/C "+Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat");
+                            //都找不到就報錯
+                            }else{                            
+                                Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
+                            }
                         }
                     }
                     break;

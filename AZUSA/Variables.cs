@@ -12,9 +12,6 @@ namespace AZUSA
         //用來儲存變量名稱(ID)和值
         static Dictionary<string, string> storage = new Dictionary<string, string>();
 
-        //系統內建提供了一組日期時間的動態變量
-        static string[] DateTimeVars = new string[] { "Y", "M", "D", "h", "m", "s", "d" };
-
         //線程鎖, 在多線程環境下保護好變量
         static private object variableMUTEX= new object();
         
@@ -141,8 +138,7 @@ namespace AZUSA
             lock (variableMUTEX)
             {
                 //不能寫入內建的日期時間變量
-                //cannot write to date time variables
-                if (DateTimeVars.Contains(name))
+                if (name.StartsWith("{")&&name.EndsWith("}"))
                 {
                     return;
                 }
@@ -167,7 +163,7 @@ namespace AZUSA
         {
             //如是日期時間變量就返回 true
             //interrupt for date time variables
-            if (DateTimeVars.Contains(name)) { return true; }
+            if (name.StartsWith("{") && name.EndsWith("}")) { return true; }
             //否則就返回是否環境是否存在這變量
             return storage.ContainsKey(name);
         }
@@ -177,30 +173,9 @@ namespace AZUSA
         {
             //如果讀取的是日期時間的話就返回相應的值, 否則就返回變量環境裡的值
             //interrupt with date time variables
-            switch (name)
-            {
-                case "Y":
-                    return DateTime.Now.Year.ToString();
-
-                case "M":
-                    return DateTime.Now.Month.ToString();
-
-                case "D":
-                    return DateTime.Now.Day.ToString();
-
-                case "h":
-                    return DateTime.Now.Hour.ToString();
-
-                case "m":
-                    return DateTime.Now.Minute.ToString();
-
-                case "s":
-                    return DateTime.Now.Second.ToString();
-
-                case "d":
-                    return DateTime.Now.DayOfWeek.ToString();
-
-                default:                    
+            if (name.StartsWith("{") && name.EndsWith("}")){
+                return DateTime.Now.ToString(name.TrimStart('{').TrimEnd('}'));
+            }else{
                     return storage[name];                    
             }
 
