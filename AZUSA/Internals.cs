@@ -346,7 +346,7 @@ namespace AZUSA
                         {
                             //再找 bat
                             if(File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat")){
-                                ProcessManager.AddProcess(cmd, "cmd.exe","/C "+Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat");
+                                ProcessManager.AddProcess(cmd, "cmd.exe","/C \""+Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\"");
                             //都找不到就報錯
                             }else{                            
                                 Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
