@@ -197,6 +197,24 @@ namespace AZUSA
                 case "MLOOP":
                     ThreadManager.AddLoop(arg.Split('\n'));
                     break;
+                // BROADCAST({expr}) 向所有引擎廣播消息
+                case "BROADCAST":
+                    ProcessManager.Broadcast(arg);
+                    break;
+                // EXIT() 退出程序
+                case "EXIT":
+                    //創建一個負責退出的線程
+                    new Thread(new ThreadStart(EXIT)).Start();
+                    break;
+                // RESTART() 重啟程序
+                case "RESTART":
+                    //創建一個負責重啟的線程
+                    new Thread(new ThreadStart(RESTART)).Start();
+                    break;
+                // WAIT({int}) 暫停線程
+                case "WAIT":
+                    System.Threading.Thread.Sleep(Convert.ToInt32(arg));
+                    break;
                 // SCRIPT({SID(.part)}) 執行腳本檔
                 case "SCRIPT":
                     //創建執行物件
@@ -270,38 +288,110 @@ namespace AZUSA
                         ERROR(Localization.GetMessage("SCRERROR","An error occured while running script named {arg}. Please make sure there is no syntax error.",scr[0]));
                     }
                     break;
-                // WAIT({int}) 暫停線程
-                case "WAIT":
-                    System.Threading.Thread.Sleep(Convert.ToInt32(arg));
-                    break;
+                
                 // ERR({expr}) 發送錯誤信息
                 case "ERR":
-                    ERROR(arg);
-                    break;
-                // MSG({expr}) 發送信息
-                case "MSG":
-                    MESSAGE(arg);
-                    break;
-                // BROADCAST({expr}) 向所有引擎廣播消息
-                case "BROADCAST":
-                    ProcessManager.Broadcast(arg);
-                    break;
-                // EXIT() 退出程序
-                case "EXIT":
-                    //創建一個負責退出的線程
-                    new Thread(new ThreadStart(EXIT)).Start();
-                    break;
-                // RESTART() 重啟程序
-                case "RESTART":
-                    //創建一個負責重啟的線程
-                    new Thread(new ThreadStart(RESTART)).Start();
-                    break;
-                default:
-                    //如果不是系統指令, 先檢查是否有引擎登記接管了這個指令
-                    // routed 記錄指令是否已被接管
+                    //ERR 是屬於表現層的系統指令, 容許被接管
                     bool routed = false;
 
                     List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
+
+                    //檢查每一個現在運行中的進程
+                    foreach (IOPortedPrc prc in ListCopy)
+                    {
+                        try
+                        {
+                            //如果進程有接管這個指令, 就把指令內容傳過去
+                            if (prc.RIDs.ContainsKey(cmd))
+                            {
+                                //設 routed 為 true
+                                routed = true;
+
+                                //根據 RIDs 的值,決定只傳參數還是指令跟參數整個傳過去
+                                //RIDs 的值如果是 true 的話就表示只傳參數
+                                if (prc.RIDs[cmd])
+                                {
+                                    prc.Input.WriteLine(arg);
+
+                                    //activity log
+                                    ActivityLog.Add("To " + prc.Name + ": " + arg);
+                                }
+                                else
+                                {
+                                    prc.Input.WriteLine(cmd + "(" + arg + ")");
+
+                                    //activity log
+                                    ActivityLog.Add("To " + prc.Name + ": " + cmd + "(" + arg + ")");
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    //扔掉 ListCopy
+                    ListCopy = null;
+
+                    //否則就由圖標發出提示
+                    if (!routed)
+                    {
+                        ERROR(arg);
+                    }
+                    break;
+                // MSG({expr}) 發送信息
+                case "MSG":
+                    //MSG 是屬於表現層的系統指令, 容許被接管
+                    routed = false;
+
+                    ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
+
+                    //檢查每一個現在運行中的進程
+                    foreach (IOPortedPrc prc in ListCopy)
+                    {
+                        try
+                        {
+                            //如果進程有接管這個指令, 就把指令內容傳過去
+                            if (prc.RIDs.ContainsKey(cmd))
+                            {
+                                //設 routed 為 true
+                                routed = true;
+
+                                //根據 RIDs 的值,決定只傳參數還是指令跟參數整個傳過去
+                                //RIDs 的值如果是 true 的話就表示只傳參數
+                                if (prc.RIDs[cmd])
+                                {
+                                    prc.Input.WriteLine(arg);
+
+                                    //activity log
+                                    ActivityLog.Add("To " + prc.Name + ": " + arg);
+                                }
+                                else
+                                {
+                                    prc.Input.WriteLine(cmd + "(" + arg + ")");
+
+                                    //activity log
+                                    ActivityLog.Add("To " + prc.Name + ": " + cmd + "(" + arg + ")");
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    //扔掉 ListCopy
+                    ListCopy = null;
+
+                    //否則就由圖標發出提示
+                    if (!routed)
+                    {
+                        MESSAGE(arg);
+                    }
+                    break;
+                
+                default:
+                    //如果不是系統指令, 先檢查是否有引擎登記接管了這個指令
+                    // routed 記錄指令是否已被接管
+                    routed = false;
+
+                    ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
 
                     //檢查每一個現在運行中的進程
                     foreach (IOPortedPrc prc in ListCopy)

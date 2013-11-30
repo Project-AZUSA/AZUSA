@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AZUSA")]
+[assembly: AssemblyTitle("Azusa Kernel")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Project AZUSA")]
 [assembly: AssemblyProduct("AZUSA")]
-[assembly: AssemblyCopyright("Copyright © Project AZUSA 2013")]
+[assembly: AssemblyCopyright("Release under MIT license by Project AZUSA (2013)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
