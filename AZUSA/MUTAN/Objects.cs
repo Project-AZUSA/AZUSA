@@ -368,6 +368,44 @@ namespace AZUSA
 
         }
 
+        // respblock 的物件
+        class respblock : IRunnable
+        {
+            // loopblock 有內容
+            string[] content;
+
+            public respblock(string[] lines)
+            {
+                //把頭尾兩行去掉就是內容了
+                content = new string[lines.Length - 2];
+                //the first line is just "@{" and can be ignored
+                for (int i = 1; i < lines.Length - 1; i++)
+                {
+                    content[i - 1] = lines[i];
+                }
+                //the last line contains only a '}' and can be ignored
+            }
+
+            ~respblock()
+            {
+                content = null;
+            }
+
+            public ReturnCode[] Run()
+            {
+                //暫存內容
+                string arg = "";
+                foreach (string line in content)
+                {
+                    //每一句用 /n 分隔
+                    arg += line + "\n";
+                }
+                //利用 WAITFORRESP 指令等待內容被執行
+                return new ReturnCode[] { new ReturnCode("WAITFORRESP", arg) };
+            }
+        }
+
+
         // condblcok 的物件
         //The condition block
         class condblock : IRunnable

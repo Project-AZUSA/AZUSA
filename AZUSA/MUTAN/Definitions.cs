@@ -30,6 +30,11 @@ namespace AZUSA
         //block
         //}
 
+        //respblock  :=
+        //?{
+        //block
+        //}
+
         //condblock  :=  
         //expr{
         //block
@@ -232,6 +237,25 @@ namespace AZUSA
             return false;
         }
 
+        //判斷是否一個 loopblock (循環區塊)
+        static public bool IsRespBlock(string[] lines)
+        {
+            //首先要以 ?{ 開頭, 以 } 結束
+            if (lines[0].Trim() == "?{" && lines[lines.Length - 1].Trim() == "}")
+            {
+                //把第一行和最後一行去掉後的內容應該要是一個 block (歸遞定義)
+                //lastly the content should be a block
+                string[] content = new string[lines.Length - 2];
+                for (int i = 1; i < lines.Length - 1; i++)
+                {
+                    content[i - 1] = lines[i];
+                }
+                return IsBlock(content);
+
+            }
+            return false;
+        }
+
         //判斷是否一個 condblock (條件區塊)
         static public bool IsCondBlock(string[] lines)
         {
@@ -339,7 +363,7 @@ namespace AZUSA
 
                         //然後檢查區塊, 如果所有的定義都不符合就表示不是合法的語法
                         //check the block
-                        if (!IsNamedBlock(content.ToArray()) && !IsCondBlock(content.ToArray()) && !IsLoopBlock(content.ToArray()))
+                        if (!IsNamedBlock(content.ToArray()) && !IsRespBlock(content.ToArray()) && !IsCondBlock(content.ToArray()) && !IsLoopBlock(content.ToArray()))
                         {
                             return false;
                         }

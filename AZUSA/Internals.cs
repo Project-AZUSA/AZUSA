@@ -16,6 +16,8 @@ namespace AZUSA
 
         static public bool Debugging = false;
 
+        static public bool EXITFLAG = true;
+
         //記錄圖標是否被點擊, 利用這個變量可以透過圖標跟用戶進行簡單的交互
         static public bool Clicked = false;
 
@@ -44,8 +46,8 @@ namespace AZUSA
             itmRELD.Click += new EventHandler(itmRELD_Click);
             MenuItem itmEXIT = new MenuItem("Exit"); //退出
             itmEXIT.Click += new EventHandler(itmEXIT_Click);
-            
-            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor,itmActivity, itmEXIT, itmRELD });
+
+            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmActivity, itmEXIT, itmRELD });
 
             //把圖標右擊菜單設成上面創建的菜單
             notifyIcon.ContextMenu = menu;
@@ -53,15 +55,15 @@ namespace AZUSA
             //搜索 Engines\ 底下的所有執行檔, SearchOption.AllDirectories 表示子目錄也在搜索範圍內
             //Start the engines
             string EngPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\Engines";
-            string[] EngList=new string[]{};
+            string[] EngList = new string[] { };
             if (Directory.Exists(EngPath))
             {
                 EngList = System.IO.Directory.GetFiles(EngPath, "*.exe", SearchOption.AllDirectories);
             }
             else
             {
-                ERROR(Localization.GetMessage("ENGPATHMISSING","The \\Engines folder is missing. AZUSA will not be able to perform any function without suitable engines."));
-                
+                ERROR(Localization.GetMessage("ENGPATHMISSING", "The \\Engines folder is missing. AZUSA will not be able to perform any function without suitable engines."));
+
                 return;
             }
 
@@ -71,13 +73,13 @@ namespace AZUSA
                 //如果不成功就發錯誤信息
                 if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
                 {
-                    Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL","Unable to run {arg}. Please make sure it is in the correct folder.",exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));       
+                    Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
                 }
             }
 
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
-            MESSAGE(Localization.GetMessage("AZUSAREADY","AZUSA is ready. Waiting for engines to initialize..."));
-            
+            MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
+
         }
 
         static void notifyIcon_DoubleClick(object sender, EventArgs e)
@@ -107,6 +109,8 @@ namespace AZUSA
         //結束程序
         static public void EXIT()
         {
+            EXITFLAG = true;
+
             //中止一切線程
             ThreadManager.BreakAll();
 
@@ -233,7 +237,7 @@ namespace AZUSA
                     }
                     catch
                     {
-                        Internals.ERROR(Localization.GetMessage("SCRMISSING","Unable to find the script named {arg}. Please make sure it is in the correct folder.",scr[0]));
+                        Internals.ERROR(Localization.GetMessage("SCRMISSING", "Unable to find the script named {arg}. Please make sure it is in the correct folder.", scr[0]));
                         return;
                     }
 
@@ -250,7 +254,47 @@ namespace AZUSA
 
                     //清理暫存
                     program = null;
-                    scr = null;
+
+                    //解析結果不為空的話就執行
+                    //否則就報錯
+                    if (obj != null)
+                    {
+
+
+                        foreach (MUTAN.ReturnCode code in obj.Run())
+                        {
+                            //腳本有特殊語法
+                            switch (code.Command)
+                            {
+                                //中止執行
+                                case "END":
+                                    goto END;                                
+                                //一般其他指令
+                                default:
+                                    Execute(code.Command, code.Argument);
+                                    break;
+                            }
+
+
+                        }
+                    END:
+                        //扔掉物件
+                        obj = null;
+                    }
+                    else
+                    {
+                        ERROR(Localization.GetMessage("SCRERROR", "An error occured while running script named {arg}. Please make sure there is no syntax error.", scr[0]));
+                    }
+                    break;
+                //等待回應
+                case "WAITFORRESP":
+                    Variables.Write("$WAITFORRESP", "TRUE");
+                    //通知引擎 (主要是針對 AI) 現在正等待回應
+                    ProcessManager.Broadcast("WaitingForResp");
+
+                    while (Convert.ToBoolean(Variables.Read("$WAITFORRESP"))) { }
+
+                    MUTAN.Parser.TryParse(arg.Split('\n'), out obj);
 
                     //解析結果不為空的話就執行
                     //否則就報錯
@@ -264,20 +308,11 @@ namespace AZUSA
                                 //中止執行
                                 case "END":
                                     goto END;
-                                //等待回應
-                                case "WAITFORRESP":
-                                    Variables.Write("$WAITFORRESP", "TRUE");
-                                    //通知引擎 (主要是針對 AI) 現在正等待回應
-                                    ProcessManager.Broadcast("WaitingForResp");
-                                    while(Convert.ToBoolean(Variables.Read("$WAITFORRESP"))){}
-                                    break;
                                 //一般其他指令
                                 default:
                                     Execute(code.Command, code.Argument);
                                     break;
                             }
-
-                           
                         }
                     END:
                         //扔掉物件
@@ -285,10 +320,9 @@ namespace AZUSA
                     }
                     else
                     {
-                        ERROR(Localization.GetMessage("SCRERROR","An error occured while running script named {arg}. Please make sure there is no syntax error.",scr[0]));
+                        ERROR(Localization.GetMessage("SCRERROR", "An error occured while running script named {arg}. Please make sure there is no syntax error.", ""));
                     }
                     break;
-                
                 // ERR({expr}) 發送錯誤信息
                 case "ERR":
                     //ERR 是屬於表現層的系統指令, 容許被接管
@@ -385,7 +419,7 @@ namespace AZUSA
                         MESSAGE(arg);
                     }
                     break;
-                
+
                 default:
                     //如果不是系統指令, 先檢查是否有引擎登記接管了這個指令
                     // routed 記錄指令是否已被接管
@@ -434,18 +468,21 @@ namespace AZUSA
                     if (!routed)
                     {
                         //否則的話就當成函式呼叫, 先找 exe
-                        if (!ProcessManager.AddProcess(cmd, Environment.CurrentDirectory + @"\Routines\" + cmd+".exe", arg))
+                        if (!ProcessManager.AddProcess(cmd, Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe", arg))
                         {
                             //再找 bat (利用 bat 可以呼叫基本上任何直譯器調用任何腳本語言了)
-                            if(File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat")){
-                                ProcessManager.AddProcess(cmd, "cmd.exe","/C \""+Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" "+arg);
-                            //再找 vbs
+                            if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat"))
+                            {
+                                ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
+                                //再找 vbs
                             }
                             else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
                             {
                                 ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
-                            //都找不到就報錯
-                            }else{                            
+                                //都找不到就報錯
+                            }
+                            else
+                            {
                                 Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
                             }
                         }

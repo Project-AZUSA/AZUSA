@@ -586,7 +586,11 @@ namespace AZUSA
 
                         //解析區塊內容, 把所得結果加進執行物件裡
                         //check the block
-                        if (IsLoopBlock(content.ToArray()))
+                        if (IsRespBlock(content.ToArray()))
+                        {
+                            objects.Add(new respblock(content.ToArray()));
+                        }
+                        else if (IsLoopBlock(content.ToArray()))
                         {
                             objects.Add(new loopblock(content.ToArray()));
                         }

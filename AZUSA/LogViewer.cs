@@ -20,6 +20,7 @@ namespace AZUSA
         {
             while (ActivityLog.HasMore())
             {
+                if (Internals.EXITFLAG) { this.Close(); }
                 listBox1.Items.Insert(0, ActivityLog.Next());
             }
         }

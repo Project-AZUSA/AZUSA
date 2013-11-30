@@ -18,6 +18,7 @@ namespace AZUSA
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            if (Internals.EXITFLAG) { this.Close(); }
             listBox.Items.Clear();
             foreach(IOPortedPrc prc in ProcessManager.GetCurrentProcesses()){
                 listBox.Items.Add("["+prc.currentType+"] "+prc.Name); 
