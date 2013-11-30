@@ -18,9 +18,9 @@ namespace AZUSA
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            if (Internals.EXITFLAG) { this.Close(); }
             while (ActivityLog.HasMore())
             {
-                if (Internals.EXITFLAG) { this.Close(); }
                 listBox1.Items.Insert(0, ActivityLog.Next());
             }
         }
