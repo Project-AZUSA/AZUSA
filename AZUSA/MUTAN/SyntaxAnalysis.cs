@@ -208,7 +208,7 @@ namespace AZUSA
                             //不是的話就是隨機運算符了
                             else
                             {
-                                if (rndGen.NextDouble() >= 0.5)
+                                if (rndGen.NextDouble() >= rndGen.NextDouble())
                                 {
                                     result = imd;
                                     return true;
