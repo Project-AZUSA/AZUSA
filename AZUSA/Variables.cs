@@ -91,8 +91,9 @@ namespace AZUSA
                         ID = ID.Trim();
 
                         //然後檢查這個變量在當前的環境是否存在, 如果是的話, 用當前的值替換
+                        //而且變量不是以 $ 開頭
                         //see if the variable already exists
-                        if (storage.ContainsKey(ID))
+                        if (storage.ContainsKey(ID) && !ID.StartsWith("$"))
                         {
                             newConfig.Add(ID + "=" + storage[ID]);
                         }
