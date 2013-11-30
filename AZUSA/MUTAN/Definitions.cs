@@ -22,7 +22,8 @@ namespace AZUSA
         //stmt  :=  basic|multi|cond
         //stmts :=  stmt{;stmt}
         //loop  :=  @stmts+ 
-        //line  :=  stmts|loop
+        //resp  :=  ?stmts+
+        //line  :=  stmts|loop|resp
 
         //(區塊的定義)
         //namedblock :=  
@@ -196,10 +197,27 @@ namespace AZUSA
             return false;
         }
 
+        //判斷是否一個 resp 
+        static public bool IsResp(string line)
+        {
+            //首先要以 ? 開首
+            //first the line has to start with '@'
+            if (line.StartsWith("?"))
+            {
+                // ? 後面必須是一個 stmts , stmts 也包括了 stmt 和所有次級定義
+                //the rest of the line has to be a stmts
+                if (IsStmts(line.TrimStart('?')))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         //判斷是否一個 line (單行語句)
         static public bool IsLine(string line)
         {
-            return IsLoop(line) || IsStmts(line);
+            return IsResp(line) || IsLoop(line) || IsStmts(line);
         }
 
 

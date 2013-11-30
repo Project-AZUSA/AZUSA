@@ -191,14 +191,9 @@ namespace AZUSA
                     string ID = arg.Split('=')[0];
                     string val = arg.Replace(ID + "=", "").Trim();
                     Variables.Write(ID, val);
-                    break;
-                // LOOP({line}) 創建單行循環線程
-                case "LOOP":
-                    string[] content = new string[] { arg };
-                    ThreadManager.AddLoop(content);
-                    break;
+                    break;                
                 // MLOOP({block}) 創建多行循環線程
-                case "MLOOP":
+                case "LOOP":
                     ThreadManager.AddLoop(arg.Split('\n'));
                     break;
                 // BROADCAST({expr}) 向所有引擎廣播消息

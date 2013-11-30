@@ -620,7 +620,11 @@ namespace AZUSA
                 //否則的話, 就是區塊外的單行
                 if (IsLine(line.Trim()))
                 {
-                    if (IsLoop(line.Trim()))
+                    if (IsResp(line.Trim()))
+                    {
+                        objects.Add(new resp(line.Trim()));
+                    }
+                    else if (IsLoop(line.Trim()))
                     {
                         objects.Add(new loop(line.Trim()));
                     }

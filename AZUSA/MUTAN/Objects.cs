@@ -328,6 +328,30 @@ namespace AZUSA
             }
         }
 
+        // resp 的物件
+        class resp : IRunnable
+        {
+            //等待的內容
+            string content;
+
+            public resp(string line)
+            {
+                //把 ? 去掉就是內容的部分了
+                content = line.TrimStart('?');
+            }
+
+            ~resp()
+            {
+                content = null;
+            }
+
+            public ReturnCode[] Run()
+            {
+                //回傳 WAITFORRESP 指令, 讓 AZUSA 創建循環線程
+                return new ReturnCode[] { new ReturnCode("WAITFORRESP", content) };
+            }
+        }
+
         //接下來是區塊的物件
 
         // namedblcok 的物件
@@ -527,7 +551,7 @@ namespace AZUSA
                     arg += line + "\n";
                 }
                 //利用 MLOOP 指令創建循環線程
-                return new ReturnCode[] { new ReturnCode("MLOOP", arg) };
+                return new ReturnCode[] { new ReturnCode("LOOP", arg) };
             }
         }
 
