@@ -5,6 +5,7 @@ using System.Text;
 
 namespace AZUSA
 {
+    //事件記錄
     class ActivityLog
     {
         static Queue<string> log = new Queue<string>();

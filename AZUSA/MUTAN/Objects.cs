@@ -331,7 +331,7 @@ namespace AZUSA
         // resp 的物件
         class resp : IRunnable
         {
-            //等待的內容
+            //反應的內容
             string content;
 
             public resp(string line)
@@ -347,7 +347,7 @@ namespace AZUSA
 
             public ReturnCode[] Run()
             {
-                //回傳 WAITFORRESP 指令, 讓 AZUSA 創建循環線程
+                //回傳 WAITFORRESP 指令, 讓 AZUSA 等待回應然後執行反應
                 return new ReturnCode[] { new ReturnCode("WAITFORRESP", content) };
             }
         }
@@ -395,19 +395,17 @@ namespace AZUSA
         // respblock 的物件
         class respblock : IRunnable
         {
-            // loopblock 有內容
+            // respblock 有內容
             string[] content;
 
             public respblock(string[] lines)
             {
                 //把頭尾兩行去掉就是內容了
                 content = new string[lines.Length - 2];
-                //the first line is just "@{" and can be ignored
                 for (int i = 1; i < lines.Length - 1; i++)
                 {
                     content[i - 1] = lines[i];
                 }
-                //the last line contains only a '}' and can be ignored
             }
 
             ~respblock()
@@ -424,7 +422,7 @@ namespace AZUSA
                     //每一句用 /n 分隔
                     arg += line + "\n";
                 }
-                //利用 WAITFORRESP 指令等待內容被執行
+                //利用 WAITFORRESP 指令等待回應然後執行反應
                 return new ReturnCode[] { new ReturnCode("WAITFORRESP", arg) };
             }
         }

@@ -197,7 +197,7 @@ namespace AZUSA
             return false;
         }
 
-        //判斷是否一個 resp 
+        //判斷是否一個 resp (反應)
         static public bool IsResp(string line)
         {
             //首先要以 ? 開首
@@ -255,7 +255,7 @@ namespace AZUSA
             return false;
         }
 
-        //判斷是否一個 loopblock (循環區塊)
+        //判斷是否一個 respblock (反應區塊)
         static public bool IsRespBlock(string[] lines)
         {
             //首先要以 ?{ 開頭, 以 } 結束
