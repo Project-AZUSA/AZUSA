@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace AZUSA
 {
-    public partial class LogViewer : Form
+    public partial class ActivityViewer : Form
     {
-        public LogViewer()
+        public ActivityViewer()
         {
             InitializeComponent();
         }
@@ -23,6 +23,11 @@ namespace AZUSA
             {
                 listBox1.Items.Insert(0, ActivityLog.Next());
             }
+        }
+
+        private void LogViewer_Load(object sender, EventArgs e)
+        {
+            this.Text = Localization.GetMessage("ACTMON", "Activity Monitor");
         }
     }
 }

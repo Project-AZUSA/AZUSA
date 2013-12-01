@@ -39,13 +39,13 @@ namespace AZUSA
             notifyIcon.DoubleClick += new EventHandler(notifyIcon_DoubleClick);
 
             //創建圖標右擊菜單的項目
-            MenuItem itmMonitor = new MenuItem("Process Monitor"); //進程監視器
+            MenuItem itmMonitor = new MenuItem(Localization.GetMessage("PRCMON","Process Monitor")); //進程監視器
             itmMonitor.Click += new EventHandler(itmMonitor_Click);
-            MenuItem itmActivity = new MenuItem("Activity Monitor"); //活動監視器
+            MenuItem itmActivity = new MenuItem(Localization.GetMessage("ACTMON", "Activity Monitor")); //活動監視器
             itmActivity.Click += new EventHandler(itmActivity_Click);
-            MenuItem itmRELD = new MenuItem("Reload"); //重新載入
+            MenuItem itmRELD = new MenuItem(Localization.GetMessage("RELOAD", "Reload")); //重新載入
             itmRELD.Click += new EventHandler(itmRELD_Click);
-            MenuItem itmEXIT = new MenuItem("Exit"); //退出
+            MenuItem itmEXIT = new MenuItem(Localization.GetMessage("EXIT", "Exit")); //退出
             itmEXIT.Click += new EventHandler(itmEXIT_Click);
 
             ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmActivity, itmEXIT, itmRELD });
@@ -90,12 +90,12 @@ namespace AZUSA
 
         static void itmActivity_Click(object sender, EventArgs e)
         {
-            new LogViewer().Show();
+            new ActivityViewer().Show();
         }
 
         static void itmMonitor_Click(object sender, EventArgs e)
         {
-            new Monitor().Show();
+            new ProcessViewer().Show();
         }
 
         static void itmRELD_Click(object sender, EventArgs e)

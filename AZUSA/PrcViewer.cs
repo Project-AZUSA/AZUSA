@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace AZUSA
 {
-    public partial class Monitor : Form
+    public partial class ProcessViewer : Form
     {
-        public Monitor()
+        public ProcessViewer()
         {
             InitializeComponent();
         }
@@ -23,6 +23,11 @@ namespace AZUSA
             foreach(IOPortedPrc prc in ProcessManager.GetCurrentProcesses()){
                 listBox.Items.Add("["+prc.currentType+"] "+prc.Name); 
             }
+        }
+
+        private void Monitor_Load(object sender, EventArgs e)
+        {
+            this.Text = Localization.GetMessage("PRCMON", "Process Monitor");
         }
     }
 }
