@@ -29,5 +29,49 @@ namespace AZUSA
         {
             this.Text = Localization.GetMessage("ACTMON", "Activity Monitor");
         }
+
+        private void ActivityViewer_Resize(object sender, EventArgs e)
+        {
+            splitContainer1.SplitterDistance = splitContainer1.Size.Height - 26;
+        }
+
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+
+                if (textBox1.Text.EndsWith("?"))
+                {
+                    string val;
+                    MUTAN.ExprParser.TryParse(textBox1.Text.TrimEnd('?'), out val);
+                    textBox1.Text = val;
+                    textBox1.SelectAll();
+                    return;
+                }
+
+                ActivityLog.Add(textBox1.Text);
+
+                MUTAN.IRunnable obj;
+                MUTAN.LineParser.TryParse(textBox1.Text, out obj);
+
+                textBox1.Text = "";
+
+                if (obj == null)
+                {
+                    textBox1.Text = "ERR";
+                    textBox1.SelectAll();
+                    return;
+                }
+
+                foreach (MUTAN.ReturnCode code in obj.Run())
+                {
+                    Internals.Execute(code.Command, code.Argument);
+                }
+            }
+
+        }
+
+       
+
     }
 }
