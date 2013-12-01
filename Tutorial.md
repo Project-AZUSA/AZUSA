@@ -5,7 +5,7 @@
 
 我們會先從單句語法開始, 再擴展到腳本和引擎的製作。完成了這個教程以後, 你就會對 AZUSA 的運作方法有透徹的理解了。
 
-那麼讓我們先啟動 AZUSA。雙擊 AZUSA.exe 就可以了。 如果提示.NET Framework Initialization Error 錯誤,請先下載安裝 .net framework 3.5 或以上 ，然後再繼續。
+那麼讓我們先啟動 AZUSA。雙擊 AZUSA.exe 就可以了。 如果提示.NET Framework Initialization Error 錯誤,請先下載安裝版本 3.5 或以上的 .NET Framework (下載地址)，然後再繼續。
 
 啟動 AZUSA 後, 通知列便會出現 AZUSA 的圖標。同時可能會出現 "\Engines 目錄不存在" 的警告。現在可以先不用管。 右擊圖標選擇活動檢視器，應該會出現如(圖)的介面。這是程序的主要調試和除錯介面，利用活動檢視器我們可以直接輸入並執行 MUTAN 指令。
 
