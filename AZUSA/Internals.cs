@@ -233,16 +233,18 @@ namespace AZUSA
                         return;
                     }
 
-                    //然後如果 scr 有兩個元素的話, 表示帶有部分名, 只需解析要求的部分
-                    if (scr.Length == 2)
+                    //如果有分塊的話, 就先進行提取
+                    if (scr.Length > 1)
                     {
-                        MUTAN.Parser.TryParse(program, out obj, scr[1].Trim());
+                        for (int i = 1; i < scr.Length; i++)
+                        {
+                            program=MUTAN.GetPart(program, scr[i]);
+                        }
                     }
-                    //否則就整個解析
-                    else
-                    {
-                        MUTAN.Parser.TryParse(program, out obj);
-                    }
+                    
+                    //然後進行解析
+                    MUTAN.Parser.TryParse(program, out obj);
+                    
 
                     //清理暫存
                     program = null;
