@@ -32,7 +32,10 @@ namespace AZUSA
 
         private void ActivityViewer_Resize(object sender, EventArgs e)
         {
-            splitContainer1.SplitterDistance = splitContainer1.Size.Height - 26;
+            if (splitContainer1.Size.Height > 26)
+            {
+                splitContainer1.SplitterDistance = splitContainer1.Size.Height - 26;
+            }
         }
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)

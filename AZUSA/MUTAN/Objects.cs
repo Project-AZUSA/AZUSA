@@ -75,6 +75,10 @@ namespace AZUSA
                 if (ExprParser.TryParse(expr, out val))
                 {
                     Variables.Write(ID, val);
+                    if (ID == "$WAITFORRESP"&&val.ToUpper()=="FALSE")
+                    {
+                        return new ReturnCode[] { new ReturnCode("MAKERESP", "") };
+                    }                   
                     return new ReturnCode[] { new ReturnCode("", "") };
                 }
                 //失敗的話就回傳錯誤信息

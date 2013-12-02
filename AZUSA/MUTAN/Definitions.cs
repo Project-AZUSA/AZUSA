@@ -204,11 +204,23 @@ namespace AZUSA
             //first the line has to start with '@'
             if (line.StartsWith("?"))
             {
-                // ? 後面必須是一個 stmts , stmts 也包括了 stmt 和所有次級定義
-                //the rest of the line has to be a stmts
-                if (IsStmts(line.TrimStart('?')))
+                //可能含有 timeout, 檢查一下有沒有冒號
+                if (line.TrimStart('?').Contains(':'))
                 {
-                    return true;
+                    // : 後面必須是一個 stmts
+                    if (IsStmts(line.Replace(line.Split(':')[0], "")))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    // ? 後面必須是一個 stmts , stmts 也包括了 stmt 和所有次級定義
+                    //the rest of the line has to be a stmts
+                    if (IsStmts(line.TrimStart('?')))
+                    {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -268,6 +280,14 @@ namespace AZUSA
                 {
                     content[i - 1] = lines[i];
                 }
+
+                //看看內容第一行是不是冒號結尾的
+                if (content[0].Trim().EndsWith(":"))
+                {
+                    //跳過這行的檢查
+                    content[0] = "";
+                }
+
                 return IsBlock(content);
 
             }

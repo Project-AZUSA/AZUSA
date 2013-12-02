@@ -39,7 +39,7 @@ namespace AZUSA
             notifyIcon.DoubleClick += new EventHandler(notifyIcon_DoubleClick);
 
             //創建圖標右擊菜單的項目
-            MenuItem itmMonitor = new MenuItem(Localization.GetMessage("PRCMON","Process Monitor")); //進程監視器
+            MenuItem itmMonitor = new MenuItem(Localization.GetMessage("PRCMON", "Process Monitor")); //進程監視器
             itmMonitor.Click += new EventHandler(itmMonitor_Click);
             MenuItem itmActivity = new MenuItem(Localization.GetMessage("ACTMON", "Activity Monitor")); //活動監視器
             itmActivity.Click += new EventHandler(itmActivity_Click);
@@ -174,6 +174,8 @@ namespace AZUSA
             }
         }
 
+        //這是用來暫存反應的
+        static string respCache = "";
 
         //執行指令
         static public void Execute(string cmd, string arg)
@@ -187,12 +189,6 @@ namespace AZUSA
             //Internal commands
             switch (cmd)
             {
-                // VAR({id}={expr}) 對變數進行寫入
-                case "VAR":
-                    string ID = arg.Split('=')[0];
-                    string val = arg.Replace(ID + "=", "").Trim();
-                    Variables.Write(ID, val);
-                    break;                
                 // MLOOP({block}) 創建多行循環線程
                 case "LOOP":
                     ThreadManager.AddLoop(arg.Split('\n'));
@@ -229,7 +225,7 @@ namespace AZUSA
                     //首先嘗試讀入腳本內容
                     try
                     {
-                        program = File.ReadAllLines(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Scripts\" + scr[0]);
+                        program = File.ReadAllLines(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Scripts\" + scr[0] + ".mut");
                     }
                     catch
                     {
@@ -264,7 +260,7 @@ namespace AZUSA
                             {
                                 //中止執行
                                 case "END":
-                                    goto END;                                
+                                    goto END;
                                 //一般其他指令
                                 default:
                                     Execute(code.Command, code.Argument);
@@ -284,13 +280,40 @@ namespace AZUSA
                     break;
                 //等待回應
                 case "WAITFORRESP":
+                    //把 $WAITFORRESP 設成 TRUE
                     Variables.Write("$WAITFORRESP", "TRUE");
                     //通知引擎 (主要是針對 AI) 現在正等待回應
                     ProcessManager.Broadcast("WaitingForResp");
 
-                    while (Convert.ToBoolean(Variables.Read("$WAITFORRESP"))) { }
+                    if (arg.Contains(':'))
+                    {
+                        int timeout;
+                        if (Int32.TryParse(arg.Split(':')[0], out timeout))
+                        {
+                            respCache = arg.Replace(timeout + ":", "");
+                            ThreadManager.AddLoop(new string[] { "WAIT(" + timeout + ")", "$RESP=null;$WAITFORRESP=FALSE","BROADCAST(RespTimeout)", "BREAK()" });
+                        }
+                    }
+                    else
+                    {
+                        respCache = arg;
+                    }
+                    break;
+                // 作出反應
+                case "MAKERESP":
+                    if (respCache == "")
+                    {
+                        break;
+                    }
 
-                    MUTAN.Parser.TryParse(arg.Split('\n'), out obj);
+                    //通知引擎已作出反應
+                    ProcessManager.Broadcast("Responded");
+
+                    //解析暫存
+                    MUTAN.Parser.TryParse(respCache.Split('\n'), out obj);
+
+                    //清空暫存
+                    respCache = "";
 
                     //解析結果不為空的話就執行
                     //否則就報錯
@@ -312,11 +335,11 @@ namespace AZUSA
                         }
                     END:
                         //扔掉物件
-                        obj = null;
+                        obj = null;                        
                     }
                     else
                     {
-                        ERROR(Localization.GetMessage("SCRERROR", "An error occured while running script named {arg}. Please make sure there is no syntax error.", ""));
+                        ERROR(Localization.GetMessage("SCRERROR", "An error occured while running a response script. Please make sure there is no syntax error. [MUTAN, " + respCache + "]"));
                     }
                     break;
                 // ERR({expr}) 發送錯誤信息
@@ -463,7 +486,21 @@ namespace AZUSA
                     //No need to continue executing the command because it has been routed already
                     if (!routed)
                     {
-                        //否則的話就當成函式呼叫, 先找 exe
+                        //否則的話就當成函式呼叫, 如果有註明副檔名的就根據副檔名執行
+                        if (cmd.Contains('.'))
+                        {
+                            switch (cmd.Split('.')[1])
+                            {
+                                case "bat":
+                                    ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + "\" " + arg);
+                                    return;
+                                case "vbs":
+                                    ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + "\" " + arg);
+                                    return;
+                            }
+                        }
+
+                        //如果沒副檔名就先找 exe
                         if (!ProcessManager.AddProcess(cmd, Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe", arg))
                         {
                             //再找 bat (利用 bat 可以呼叫基本上任何直譯器調用任何腳本語言了)
