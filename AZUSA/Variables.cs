@@ -101,6 +101,7 @@ namespace AZUSA
                         else if (storage.ContainsKey("_" + ID) && ID.StartsWith("$"))
                         {
                             newConfig.Add(ID + "=" + storage["_"+ID]);
+                            updated.Add("_"+ID);
                         }
                         //否則就保持原狀
                         else //keep it
