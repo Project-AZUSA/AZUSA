@@ -97,6 +97,11 @@ namespace AZUSA
                         {
                             newConfig.Add(ID + "=" + storage[ID]);
                         }
+                        //以 _$ 開頭就是設預設值的
+                        else if (storage.ContainsKey("_" + ID) && ID.StartsWith("$"))
+                        {
+                            newConfig.Add(ID + "=" + storage["_"+ID]);
+                        }
                         //否則就保持原狀
                         else //keep it
                         {
@@ -123,7 +128,17 @@ namespace AZUSA
                 if (!pair.Key.StartsWith("$") && !updated.Contains(pair.Key))
                 {
                     //就把它加進寫入的內容
-                    newConfig.Add(pair.Key + "=" + pair.Value);
+
+                    //如果是設預設值的話先去掉"_"
+                    if (pair.Key.StartsWith("_$"))
+                    {
+                        newConfig.Add(pair.Key.TrimStart('_') + "=" + pair.Value);
+                    }
+                    //否則就正常寫入就行了
+                    else
+                    {                        
+                        newConfig.Add(pair.Key + "=" + pair.Value);
+                    }
                 }
             }
 
