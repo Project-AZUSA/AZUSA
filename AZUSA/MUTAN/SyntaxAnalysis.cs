@@ -281,14 +281,31 @@ namespace AZUSA
                     }
                     #endregion
 
-                    //邏輯運算之後就是加減乘除的運算
+                    //邏輯運算之後就是加減乘除的運算, 和特殊的逗號運算符
                     #region String concatenation and arithmetic operators spliting
+
+
+                    if (expr.Contains(",") && !InvalidOp.Contains(expr.IndexOf(",")))
+                    {
+                        //先分割成左右兩部分
+                        string LHS = expr.Split(',')[0];
+                        string RHS = expr.Replace(LHS + ",", "").Trim();                        
+                        LHS = LHS.Trim();
+
+                        if (TryParse(LHS, out imd) && TryParse(RHS, out imd2))
+                        {
+
+                            result = expr.Replace(LHS,imd).Replace(RHS,imd2);
+                            return true;
+                        }
+                    }
+
                     if (expr.Contains("+") && !InvalidOp.Contains(expr.IndexOf("+")))
                     {
                         //加號因為同時是算術加法和字串合併, 所以要先做檢查, 判斷何者適用
                         bool isStrCat = false;
 
-                        //先分割成左加兩部分
+                        //先分割成左右兩部分
                         string LHS = expr.Split('+')[0];
                         string RHS = expr.Replace(LHS + "+", "").Trim();
                         LHS = LHS.Trim();
