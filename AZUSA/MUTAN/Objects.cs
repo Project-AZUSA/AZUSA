@@ -75,16 +75,16 @@ namespace AZUSA
                 if (ExprParser.TryParse(expr, out val))
                 {
                     Variables.Write(ID, val);
-                    if (ID == "$WAITFORRESP"&&val.ToUpper()=="FALSE")
+                    if (ID == "$WAITFORRESP" && val.ToUpper() == "FALSE")
                     {
                         return new ReturnCode[] { new ReturnCode("MAKERESP", "") };
-                    }                   
+                    }
                     return new ReturnCode[] { new ReturnCode("", "") };
                 }
                 //失敗的話就回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", expr + Localization.GetMessage("INVALIDEXPR"," is not a valid expression.")+" [MUTAN, " + ID + "=" + expr + "]") };
+                    return new ReturnCode[] { new ReturnCode("ERR", expr + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + ID + "=" + expr + "]") };
                 }
 
             }
@@ -137,6 +137,35 @@ namespace AZUSA
             }
         }
 
+        //中斷語句的物件
+        class term : IRunnable
+        {
+            string command="";
+            public term(string line)
+            {
+                if (line == "END")
+                {
+                    command = "END";
+                }
+                else
+                {
+                    command = "BREAK";
+                }
+
+            }
+            public ReturnCode[] Run()
+            {
+                //防止變量寫入?
+
+
+
+                //----------------------------
+                
+                //單純返回指令
+                return new ReturnCode[] { new ReturnCode(command, "") };
+            }
+        }
+
         // multi 的物件
         //The multi statement
         class multi : IRunnable
@@ -156,6 +185,10 @@ namespace AZUSA
                     if (IsComment(parts[i]))
                     {
                         basics[i] = new empty();
+                    }
+                    else if (IsTerm(parts[i]))
+                    {
+                        basics[i] = new term(parts[i].Trim());
                     }
                     else if (IsExec(parts[i]))
                     {
@@ -252,60 +285,7 @@ namespace AZUSA
                 }
             }
         }
-
-        // stmts 的物件
-        //The stmts statement
-        class stmts : IRunnable
-        {
-            //stmts 由 stmt 組成
-            IRunnable[] stmt;
-
-            public stmts(string line)
-            {
-                //先分割成多個 stmt
-                string[] parts = line.Split(';');
-                stmt = new IRunnable[parts.Length];
-
-                //然後進行分類
-                for (int i = 0; i < parts.Length; i++)
-                {
-                    if (IsCond(parts[i]))
-                    {
-                        stmt[i] = new cond(parts[i]);
-                    }
-                    else
-                    {
-                        stmt[i] = new multi(parts[i]);
-                    }
-                }
-
-            }
-
-            ~stmts()
-            {
-                stmt = null;
-            }
-
-            public ReturnCode[] Run()
-            {
-                //暫存執行結果
-                List<ReturnCode> returns = new List<ReturnCode>();
-                ReturnCode[] tmp;
-
-                //遂句執行, 並保存結果
-                foreach (IRunnable obj in stmt)
-                {
-                    tmp = obj.Run();
-                    foreach (ReturnCode code in tmp)
-                    {
-                        returns.Add(code);
-                    }
-
-                }
-
-                return returns.ToArray();
-            }
-        }
+        
 
         // loop 的物件
         //The loop statement

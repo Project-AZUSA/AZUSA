@@ -427,16 +427,22 @@ namespace AZUSA
                 //Parsing should begin from large scale structure to small scale structure
                 //in order to ensure correct priority
 
-                //單行指令只有兩種 loop 或 stmts
+                //單行指令可以是 loop, cond 或 multi
                 if (IsLoop(line))
                 {
                     obj = new loop(line);
                     return true;
                 }
 
-                if (IsStmts(line))
+                if (IsCond(line))
                 {
-                    obj = new stmts(line);
+                    obj = new cond(line);
+                    return true;
+                }
+
+                if (IsMulti(line))
+                {
+                    obj = new multi(line);
                     return true;
                 }
 
@@ -569,9 +575,13 @@ namespace AZUSA
                     {
                         objects.Add(new loop(line.Trim()));
                     }
-                    else
+                    else if(IsCond(line.Trim()))
                     {
-                        objects.Add(new stmts(line.Trim()));
+                        objects.Add(new cond(line.Trim()));
+                    }
+                    else if (IsMulti(line.Trim()))
+                    {
+                        objects.Add(new multi(line.Trim()));
                     }
                 }
             }

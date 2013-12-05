@@ -16,14 +16,14 @@ namespace AZUSA
         //expr  :=  *          (任何不為空的表達式, 例如 1+1, (1>2)&(VAR=3), ~(true&true|false) 實施時利用表達式解析器判斷是否合法)
         //decla :=  [$]ID=expr (變量宣告, 變量名如以 $ 開頭表示是臨時變量, AZUSA 在退出時不會保存)
         //exec  :=  RID(expr|"")   (函式調用, RID 是函式名, 參數可以是表達式或空白字串)
-        //basic  :=  decla|exec
+        //term  :=  "END"|"BREAK" (中斷執行用)
+        //basic :=  decla|exec|term
         //multi :=  basic{;basic}
         //cond  :=  expr?multi
-        //stmt  :=  basic|multi|cond
-        //stmts :=  stmt{;stmt}
-        //loop  :=  @stmts+ 
-        //resp  :=  ?stmts+
-        //line  :=  stmts|loop|resp
+        //stmt  :=  multi|cond        
+        //loop  :=  @stmt 
+        //resp  :=  ?stmt
+        //line  :=  stmt|loop|resp
 
         //(區塊的定義)
         //namedblock :=  
@@ -104,6 +104,18 @@ namespace AZUSA
             return false;
         }
 
+        //判斷是否一個 term (end/break)
+        static public bool IsTerm(string line)
+        {
+
+            if (line.Trim() == "END" || line.Trim() == "BREAK")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         //判斷是否一個 comment (注解)
         static public bool IsComment(string line)
         {
@@ -114,7 +126,7 @@ namespace AZUSA
         //判斷是否一個 basic (基本指令)
         static public bool IsBasic(string line)
         {
-            return IsDecla(line) || IsExec(line) || IsComment(line);
+            return IsDecla(line) || IsExec(line) || IsTerm(line) || IsComment(line);
         }
 
         //判斷是否一個 multi (一行多句指令)
@@ -162,23 +174,7 @@ namespace AZUSA
             //包含 cond 和 multi, 留意 multi 同時包含了 basic 所以也包含了 decla 和 exec
             return IsCond(line) || IsMulti(line);  //what is basic is also a multi
         }
-
-        //判斷是否一個 stmts (一行多句陳述)
-        static public bool IsStmts(string line)
-        {
-            //一行多句陳述以 ; 作為分隔標號
-            //split each part with ';', each part should be a stmt
-            foreach (string part in line.Split(';'))
-            {
-                //如果有任何一句不是陳述就不是 multi
-                if (!IsStmt(part))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
+        
 
         //判斷是否一個 loop (單句循環)
         static public bool IsLoop(string line)
@@ -189,7 +185,7 @@ namespace AZUSA
             {
                 // @ 後面必須是一個 stmts , stmts 也包括了 stmt 和所有次級定義
                 //the rest of the line has to be a stmts
-                if (IsStmts(line.TrimStart('@')))
+                if (IsStmt(line.TrimStart('@')))
                 {
                     return true;
                 }
@@ -207,17 +203,17 @@ namespace AZUSA
                 //可能含有 timeout, 檢查一下有沒有冒號
                 if (line.TrimStart('?').Contains(':'))
                 {
-                    // : 後面必須是一個 stmts
-                    if (IsStmts(line.Replace(line.Split(':')[0], "")))
+                    // : 後面必須是一個 stmt
+                    if (IsStmt(line.Replace(line.Split(':')[0], "")))
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    // ? 後面必須是一個 stmts , stmts 也包括了 stmt 和所有次級定義
-                    //the rest of the line has to be a stmts
-                    if (IsStmts(line.TrimStart('?')))
+                    // ? 後面必須是一個 stmt , stmt 也包括了 stmt 和所有次級定義
+                    //the rest of the line has to be a stmt
+                    if (IsStmt(line.TrimStart('?')))
                     {
                         return true;
                     }
@@ -229,7 +225,7 @@ namespace AZUSA
         //判斷是否一個 line (單行語句)
         static public bool IsLine(string line)
         {
-            return IsResp(line) || IsLoop(line) || IsStmts(line);
+            return IsResp(line) || IsLoop(line) || IsStmt(line);
         }
 
 

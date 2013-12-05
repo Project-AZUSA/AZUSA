@@ -161,7 +161,11 @@ namespace AZUSA
         {
             if (msg != "")
             {
+
                 notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Error);
+
+                //activity log
+                ActivityLog.Add("AZUSA: " + msg);
             }
         }
 
@@ -171,6 +175,9 @@ namespace AZUSA
             if (msg != "")
             {
                 notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Info);
+
+                //activity log
+                ActivityLog.Add("AZUSA: " + msg);
             }
         }
 
@@ -189,7 +196,7 @@ namespace AZUSA
             //Internal commands
             switch (cmd)
             {
-                // MLOOP({block}) 創建多行循環線程
+                // LOOP({block}) 創建多行循環線程
                 case "LOOP":
                     ThreadManager.AddLoop(arg.Split('\n'));
                     break;
@@ -238,13 +245,13 @@ namespace AZUSA
                     {
                         for (int i = 1; i < scr.Length; i++)
                         {
-                            program=MUTAN.GetPart(program, scr[i]);
+                            program = MUTAN.GetPart(program, scr[i]);
                         }
                     }
-                    
+
                     //然後進行解析
                     MUTAN.Parser.TryParse(program, out obj);
-                    
+
 
                     //清理暫存
                     program = null;
@@ -254,24 +261,11 @@ namespace AZUSA
                     if (obj != null)
                     {
 
-
                         foreach (MUTAN.ReturnCode code in obj.Run())
                         {
-                            //腳本有特殊語法
-                            switch (code.Command)
-                            {
-                                //中止執行
-                                case "END":
-                                    goto END;
-                                //一般其他指令
-                                default:
-                                    Execute(code.Command, code.Argument);
-                                    break;
-                            }
-
-
+                           Execute(code.Command, code.Argument);
                         }
-                    END:
+                   
                         //扔掉物件
                         obj = null;
                     }
@@ -293,7 +287,7 @@ namespace AZUSA
                         if (Int32.TryParse(arg.Split(':')[0], out timeout))
                         {
                             respCache = arg.Replace(timeout + ":", "");
-                            ThreadManager.AddLoop(new string[] { "WAIT(" + timeout + ")", "$RESP=null;$WAITFORRESP=FALSE","BROADCAST(RespTimeout)", "BREAK()" });
+                            ThreadManager.AddLoop(new string[] { "WAIT(" + timeout + ")", "$RESP=null;$WAITFORRESP=FALSE", "BROADCAST(RespTimeout)", "BREAK()" });
                         }
                     }
                     else
@@ -323,21 +317,19 @@ namespace AZUSA
                     {
                         foreach (MUTAN.ReturnCode code in obj.Run())
                         {
-                            //腳本有特殊語法
-                            switch (code.Command)
+                            //中止執行
+                            if (code.Command == "END")
                             {
-                                //中止執行
-                                case "END":
-                                    goto END;
+                                break;
+                            }
+                            else
+                            {
                                 //一般其他指令
-                                default:
-                                    Execute(code.Command, code.Argument);
-                                    break;
+                                Execute(code.Command, code.Argument);
                             }
                         }
-                    END:
                         //扔掉物件
-                        obj = null;                        
+                        obj = null;
                     }
                     else
                     {
