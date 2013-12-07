@@ -419,7 +419,7 @@ namespace AZUSA
                 //如果是空行就回傳一個空物件
                 if (line.Trim() == "")
                 {
-                    obj = new empty();
+                    obj = new empty();                    
                     return true;
                 }
 

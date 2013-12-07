@@ -196,6 +196,13 @@ namespace AZUSA
             //Internal commands
             switch (cmd)
             {
+                // VAR(ID=val) 寫入變量
+                case "VAR":
+                    string ID = arg.Split('=')[0];
+                    string val = arg.Replace(ID + "=", "");
+                    ID = ID.Trim();
+                    Variables.Write(ID, val);
+                    break;
                 // LOOP({block}) 創建多行循環線程
                 case "LOOP":
                     ThreadManager.AddLoop(arg.Split('\n'));
@@ -252,7 +259,6 @@ namespace AZUSA
                     //然後進行解析
                     MUTAN.Parser.TryParse(program, out obj);
 
-
                     //清理暫存
                     program = null;
 
@@ -263,9 +269,20 @@ namespace AZUSA
 
                         foreach (MUTAN.ReturnCode code in obj.Run())
                         {
-                           Execute(code.Command, code.Argument);
+                            //中止執行
+                            if (code.Command == "END")
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                Execute(code.Command, code.Argument);
+                            }
                         }
-                   
+
+                        //清理解析生成的暫存變量
+                        Variables.CleanUp();
+
                         //扔掉物件
                         obj = null;
                     }
@@ -297,6 +314,9 @@ namespace AZUSA
                     break;
                 // 作出反應
                 case "MAKERESP":
+                    //把 $WAITFORRESP 設成 FALSE
+                    Variables.Write("$WAITFORRESP", "TRUE");
+
                     if (respCache == "")
                     {
                         break;
@@ -324,10 +344,11 @@ namespace AZUSA
                             }
                             else
                             {
-                                //一般其他指令
+                            //一般其他指令
                                 Execute(code.Command, code.Argument);
                             }
                         }
+                        
                         //扔掉物件
                         obj = null;
                     }

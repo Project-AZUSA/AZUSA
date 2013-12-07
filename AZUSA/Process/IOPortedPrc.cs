@@ -328,6 +328,9 @@ namespace AZUSA
                 //如果成功解析, 則運行物件, 獲取回傳碼
                 MUTAN.ReturnCode[] returns = obj.Run();
 
+                //清理解析生成的暫存變量
+                Variables.CleanUp();
+
                 //然後按回傳碼執行指令
                 foreach (MUTAN.ReturnCode code in returns)
                 {

@@ -100,8 +100,8 @@ namespace AZUSA
                         //以 _$ 開頭就是設預設值的
                         else if (storage.ContainsKey("_" + ID) && ID.StartsWith("$"))
                         {
-                            newConfig.Add(ID + "=" + storage["_"+ID]);
-                            updated.Add("_"+ID);
+                            newConfig.Add(ID + "=" + storage["_" + ID]);
+                            updated.Add("_" + ID);
                         }
                         //否則就保持原狀
                         else //keep it
@@ -137,7 +137,7 @@ namespace AZUSA
                     }
                     //否則就正常寫入就行了
                     else
-                    {                        
+                    {
                         newConfig.Add(pair.Key + "=" + pair.Value);
                     }
                 }
@@ -182,7 +182,7 @@ namespace AZUSA
             //interrupt for date time variables
             if (name.StartsWith("{") && name.EndsWith("}") && !name.Contains('+')) { return true; }
             //否則就返回是否環境是否存在這變量
-            return storage.ContainsKey(name);
+            return storage.ContainsKey(name) || storage.ContainsKey("$TMP_"+name);
         }
 
         //讀取變量
@@ -201,10 +201,27 @@ namespace AZUSA
             }
             else
             {
-                return storage[name];
+                if (Exist("$TMP_" + name))
+                {
+                    return storage["$TMP_" + name];
+                }
+                else
+                {
+                    return storage[name];
+                }
             }
+        }
 
-
+        static public void CleanUp()
+        {
+            lock (variableMUTEX)
+            {
+                string[] TMP=storage.Where(p => p.Key.StartsWith("$TMP_")).Select(p=>p.Key).ToArray();
+                foreach (string tmp in TMP)
+                {
+                    storage.Remove(tmp);
+                }
+            }
         }
     }
 }

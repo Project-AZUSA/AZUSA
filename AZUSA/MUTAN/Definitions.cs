@@ -104,7 +104,7 @@ namespace AZUSA
             return false;
         }
 
-        //判斷是否一個 term (end/break)
+        //判斷是否一個 term (break)
         static public bool IsTerm(string line)
         {
 

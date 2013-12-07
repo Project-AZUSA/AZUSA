@@ -70,16 +70,20 @@ namespace AZUSA
                 //暫存運算結果
                 string val;
 
-                //如果運算成功就寫入變量的值
+                //如果運算成功就寫入暫存變量的值
                 //回傳空白的返回碼
                 if (ExprParser.TryParse(expr, out val))
                 {
-                    Variables.Write(ID, val);
+                    //如果是反應設定
                     if (ID == "$WAITFORRESP" && val.ToUpper() == "FALSE")
                     {
                         return new ReturnCode[] { new ReturnCode("MAKERESP", "") };
                     }
-                    return new ReturnCode[] { new ReturnCode("", "") };
+
+                    //寫入暫存變量
+                    Variables.Write("$TMP_"+ID, val);
+
+                    return new ReturnCode[] { new ReturnCode("VAR", ID+"="+val) };
                 }
                 //失敗的話就回傳錯誤信息
                 else
@@ -154,13 +158,7 @@ namespace AZUSA
 
             }
             public ReturnCode[] Run()
-            {
-                //防止變量寫入?
-
-
-
-                //----------------------------
-                
+            {                
                 //單純返回指令
                 return new ReturnCode[] { new ReturnCode(command, "") };
             }
@@ -571,6 +569,9 @@ namespace AZUSA
                     }
 
                 }
+
+                //清理中途生成的暫存變量
+                Variables.CleanUp();
 
                 return returns.ToArray();
             }
