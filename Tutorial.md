@@ -417,29 +417,29 @@
 
 內建指令一覽
 ------------
-BROADCAST
-DEBUG
-ERR (可接管)
-EXIT
-MAKERESP
-MSG (可接管)
-RESTART
-SCRIPT
-WAIT
+* BROADCAST
+* DEBUG
+* ERR (可接管)
+* EXIT
+* MAKERESP
+* MSG (可接管)
+* RESTART
+* SCRIPT
+* WAIT
 
 溝通用指令一覽
 --------------
-GetAzusaPid
-GetAllPorts
-GetAIPorts
-GetInputPorts
-GetOutputPorts
-LinkRID
-RegisterAs(AI/Output/Input/Application)
-RegisterPort
+* GetAzusaPid
+* GetAllPorts
+* GetAIPorts
+* GetInputPorts
+* GetOutputPorts
+* LinkRID
+* RegisterAs(AI/Output/Input/Application)
+* RegisterPort
 
 消息通知一覽
 ------------
-PortHasChanged
-Responded
-WaitingForResp
+* PortHasChanged
+* Responded
+* WaitingForResp
