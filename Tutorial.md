@@ -420,6 +420,7 @@
 * BROADCAST
 * DEBUG
 * ERR (可接管)
+* EXEC
 * EXIT
 * MAKERESP
 * MSG (可接管)
