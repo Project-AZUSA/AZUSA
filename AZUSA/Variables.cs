@@ -170,8 +170,11 @@ namespace AZUSA
                     storage.Add(name, val);
                 }
 
+                if (!name.StartsWith("$TMP_"))
+                {
                 //activity log
                 ActivityLog.Add("Value of " + name + " has been changed to " + val);
+                }
             }
         }
 

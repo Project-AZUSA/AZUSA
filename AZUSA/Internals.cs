@@ -298,24 +298,12 @@ namespace AZUSA
                     //通知引擎 (主要是針對 AI) 現在正等待回應
                     ProcessManager.Broadcast("WaitingForResp");
 
-                    if (arg.Contains(':'))
-                    {
-                        int timeout;
-                        if (Int32.TryParse(arg.Split(':')[0], out timeout))
-                        {
-                            respCache = arg.Replace(timeout + ":", "");
-                            ThreadManager.AddLoop(new string[] { "WAIT(" + timeout + ")", "$RESP=null;$WAITFORRESP=FALSE", "BROADCAST(RespTimeout)", "BREAK()" });
-                        }
-                    }
-                    else
-                    {
-                        respCache = arg;
-                    }
+                    respCache = arg;                    
                     break;
                 // 作出反應
                 case "MAKERESP":
                     //把 $WAITFORRESP 設成 FALSE
-                    Variables.Write("$WAITFORRESP", "TRUE");
+                    Variables.Write("$WAITFORRESP", "FALSE");
 
                     if (respCache == "")
                     {

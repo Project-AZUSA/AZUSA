@@ -46,7 +46,7 @@ namespace AZUSA
         //block
         //}
 
-        //block := (line|namedblock|condblock|loopblock)*  (最終定義, 只要是 block 就是 MUTAN)
+        //block := (line|namedblock|respblock|condblock|loopblock)*  (最終定義, 只要是 block 就是 MUTAN)
 
 
 
@@ -271,20 +271,16 @@ namespace AZUSA
             {
                 //把第一行和最後一行去掉後的內容應該要是一個 block (歸遞定義)
                 //lastly the content should be a block
-                string[] content = new string[lines.Length - 2];
+                List<string> content =new List<string>();
                 for (int i = 1; i < lines.Length - 1; i++)
                 {
-                    content[i - 1] = lines[i];
-                }
+                    if (lines[i].Trim() != "")
+                    {
+                        content.Add(lines[i]);
+                    }
+                }                
 
-                //看看內容第一行是不是冒號結尾的
-                if (content[0].Trim().EndsWith(":"))
-                {
-                    //跳過這行的檢查
-                    content[0] = "";
-                }
-
-                return IsBlock(content);
+                return IsBlock(content.ToArray());
 
             }
             return false;

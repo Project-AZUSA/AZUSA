@@ -22,6 +22,7 @@ namespace AZUSA
             while (ActivityLog.HasMore())
             {
                 listBox1.Items.Insert(0, ActivityLog.Next());
+                
             }
         }
 
