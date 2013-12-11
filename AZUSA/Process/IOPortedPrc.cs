@@ -334,12 +334,12 @@ namespace AZUSA
                 //然後按回傳碼執行指令
                 foreach (MUTAN.ReturnCode code in returns)
                 {
-                    //首先是 NYAN 指令組的指令, NYAN 指令組主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令
-                    //Handle NYAN protocol related commands, leave the rest to AZUSA internals
+                    //首先是 溝通用的指令, 主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令
+                    //Handle protocol related commands, leave the rest to AZUSA internals
                     switch (code.Command)
                     {
                         //這是用來進入除錯模式的, 除錯模式下不會要求完備性
-                        case "Debugging":                            
+                        case "DEBUG":                            
                             Internals.Debugging = true;
                             Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
                             break;
@@ -468,6 +468,10 @@ namespace AZUSA
 
                             this.RIDs.Add(parsed[0], Convert.ToBoolean(parsed[1]));
 
+                            break;
+                        //添加右鍵選單項目
+                        case "AddMenuItem":
+                            Internals.ADDMENUITEM(code.Argument);
                             break;
                         //如果不是上面的 NYAN 指令組的指令的話, 就要判斷 AZUSA 是否完整 (AI, 輸入, 輸出)
                         //如果完整就把指令傳達到內部執行

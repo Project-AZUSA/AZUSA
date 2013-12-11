@@ -47,12 +47,13 @@ namespace AZUSA
             itmRELD.Click += new EventHandler(itmRELD_Click);
             MenuItem itmEXIT = new MenuItem(Localization.GetMessage("EXIT", "Exit")); //退出
             itmEXIT.Click += new EventHandler(itmEXIT_Click);
+            MenuItem sep = new MenuItem("-");
 
-            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmActivity, itmEXIT, itmRELD });
+            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmActivity,sep, itmRELD ,itmEXIT});
 
             //把圖標右擊菜單設成上面創建的菜單
             notifyIcon.ContextMenu = menu;
-
+            
             //搜索 Engines\ 底下的所有執行檔, SearchOption.AllDirectories 表示子目錄也在搜索範圍內
             //Start the engines
             string EngPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\Engines";
@@ -68,6 +69,7 @@ namespace AZUSA
                 return;
             }
 
+
             //每一個執行檔都添加為引擎
             foreach (string exePath in EngList)
             {
@@ -80,6 +82,7 @@ namespace AZUSA
 
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
             MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
+
 
         }
 
@@ -181,6 +184,28 @@ namespace AZUSA
             }
         }
 
+        //增加右鍵選單的選項
+        static public void ADDMENUITEM(string name)
+        {
+            MenuItem itm = new MenuItem(Localization.GetMessage(name,name));
+            itm.Name=name;
+            itm.Click+=new EventHandler(itm_Click);
+
+            if (notifyIcon.ContextMenu.MenuItems.Count == 5)
+            {
+                notifyIcon.ContextMenu.MenuItems.Add(3, new MenuItem("-"));
+            }
+
+            notifyIcon.ContextMenu.MenuItems.Add(3,itm);
+            
+        }
+
+        static void itm_Click(object sender, EventArgs e)
+        {
+            MenuItem itm = (MenuItem)sender;
+            ProcessManager.Broadcast(itm.Text);
+        }
+
         //這是用來暫存反應的
         static string respCache = "";
 
@@ -224,6 +249,16 @@ namespace AZUSA
                 // WAIT({int}) 暫停線程
                 case "WAIT":
                     System.Threading.Thread.Sleep(Convert.ToInt32(arg));
+                    break;
+                // EXEC(filepath,IsApp) 創建進程
+                case "EXEC":
+                    string patharg = arg.Split(',')[0];
+                    bool isapp = Convert.ToBoolean(arg.Replace(patharg + ",", ""));
+                    patharg = patharg.Trim();
+                    string path=patharg.Split('$')[0];
+                    string Arg=patharg.Replace(path+"$","");
+
+                    ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
                     break;
                 // SCRIPT({SID(.part)}) 執行腳本檔
                 case "SCRIPT":
