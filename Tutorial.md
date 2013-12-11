@@ -428,8 +428,9 @@
 * SCRIPT
 * WAIT
 
-溝通用指令一覽
+引擎專用指令一覽
 --------------
+* AddMenuItem
 * GetAzusaPid
 * GetAllPorts
 * GetAIPorts
