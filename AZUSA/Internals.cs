@@ -241,11 +241,24 @@ namespace AZUSA
                     break;
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
-                    string patharg = arg.Split(',')[0];
-                    bool isapp = Convert.ToBoolean(arg.Replace(patharg + ",", ""));
+                    string patharg = arg;
+                    bool isapp;
+                    if (arg.Contains(','))
+                    {
+                        patharg = arg.Split(',')[0];                        
+                    }
+                    if (!Boolean.TryParse(arg.Replace(patharg + ",", ""), out isapp))
+                    {
+                        isapp = true;
+                    }
                     patharg = patharg.Trim();
-                    string path = patharg.Split('$')[0];
-                    string Arg = patharg.Replace(path + "$", "");
+                    string path = patharg;
+                    string Arg = "";
+                    if (patharg.Contains('$'))
+                    {
+                        path = patharg.Split('$')[0];
+                        Arg = patharg.Replace(path + "$", "");
+                    }
 
                     ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
                     break;
