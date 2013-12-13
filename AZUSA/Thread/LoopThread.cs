@@ -9,7 +9,7 @@ namespace AZUSA
     //循環線程
     class LoopThread
     {
-       
+
         //線程的實體
         Thread thread;
 
@@ -20,7 +20,7 @@ namespace AZUSA
         bool BREAKING = false;
 
         public LoopThread(string[] content)
-        {            
+        {
             //把代碼解析成執行物件
             MUTAN.Parser.TryParse(content, out obj);
 
@@ -78,20 +78,20 @@ namespace AZUSA
             while (!BREAKING)
             {
                 //執行物件, 取得返回碼
-                foreach (MUTAN.ReturnCode code in obj.Run())
+                MUTAN.ReturnCode tmp = obj.Run();
+
+                //如果是 BREAK 指令, 就設 BREAK 為真, 退出循環
+                if (tmp.Command.Trim() == "BREAK")
                 {
-                    //如果是 BREAK 指令, 就設 BREAK 為真, 退出循環
-                    if (code.Command.Trim() == "BREAK")
-                    {
-                        BREAKING = true;
-                        break;
-                    }
-                    //否則就執行指令
-                    else
-                    {
-                        Internals.Execute(code.Command, code.Argument);
-                    }
+                    BREAKING = true;
+                    break;
                 }
+                //否則就執行指令
+                else
+                {
+                    Internals.Execute(tmp.Command, tmp.Argument);
+                }
+
             }
 
             //如果循環結束了就中斷線程

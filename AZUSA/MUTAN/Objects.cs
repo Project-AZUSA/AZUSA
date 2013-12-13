@@ -28,17 +28,17 @@ namespace AZUSA
         //The detailed implementation of how to "run" a line is deferred to the object  
         public interface IRunnable
         {
-            ReturnCode[] Run();
+            ReturnCode Run();
         }
 
         //空白語句的物件
         //empty object for an empty line, or comment
         class empty : IRunnable
         {
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //單純返回空白返回碼
-                return new ReturnCode[] { new ReturnCode("", "") };
+                return new ReturnCode("","");
             }
         }
 
@@ -65,32 +65,32 @@ namespace AZUSA
             }
 
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //暫存運算結果
                 string val;
 
-                //如果運算成功就寫入暫存變量的值
+                //如果運算成功就寫入變量的值
                 //回傳空白的返回碼
                 if (ExprParser.TryParse(expr, out val))
                 {
                     //如果是反應設定
                     if (ID == "$WAITFORRESP" && val.ToUpper() == "FALSE")
                     {
-                        return new ReturnCode[] { new ReturnCode("MAKERESP", "") };
+                        Internals.Execute("MAKERESP", "");
+                        return new ReturnCode("", "");
                     }
 
-                    //寫入暫存變量
-                    Variables.Write("$TMP_"+ID, val);
+                    //寫入變量                    
+                    Variables.Write(ID, val);
 
-                    return new ReturnCode[] { new ReturnCode("VAR", ID+"="+val) };
+                    return new ReturnCode("","");
                 }
                 //失敗的話就回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", expr + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + ID + "=" + expr + "]") };
+                    return new ReturnCode("ERR", expr + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + ID + "=" + expr + "]");
                 }
-
             }
         }
 
@@ -116,13 +116,13 @@ namespace AZUSA
                 arg = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
-                //如果參數是空白,就返回函數名和空白參數
-                //if empty argument (which is NOT a valid expression for maintaining proper parsing)
+                //如果參數是空白,就直接執行, 不必運算參數                
                 if (arg.Trim() == "")
                 {
-                    return new ReturnCode[] { new ReturnCode(RID, "") };
+                    Internals.Execute(RID, "");
+                    return new ReturnCode("", "");
                 }
 
                 //否則就要對參數進行運數
@@ -133,18 +133,19 @@ namespace AZUSA
                 //如果失敗的話就回傳錯誤信息
                 if (!ExprParser.TryParse(arg, out val))
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", arg + Localization.GetMessage("INVALIDEXPR"," is not a valid expression.")+"[MUTAN, " + RID + "(" + arg + ")]") };
+                    return new ReturnCode("ERR", arg + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + "[MUTAN, " + RID + "(" + arg + ")]");
                 }
 
-                //否則就回傳函數名和參數
-                return new ReturnCode[] { new ReturnCode(RID, val) };
+                //否則就執行
+                Internals.Execute(RID, val);
+                return new ReturnCode("","");
             }
         }
 
         //中斷語句的物件
         class term : IRunnable
         {
-            string command="";
+            string command = "";
             public term(string line)
             {
                 if (line == "END")
@@ -157,10 +158,10 @@ namespace AZUSA
                 }
 
             }
-            public ReturnCode[] Run()
-            {                
+            public ReturnCode Run()
+            {
                 //單純返回指令
-                return new ReturnCode[] { new ReturnCode(command, "") };
+                return new ReturnCode(command, "");
             }
         }
 
@@ -205,24 +206,24 @@ namespace AZUSA
                 basics = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //暫存執行結果
                 List<ReturnCode> returns = new List<ReturnCode>();
-                ReturnCode[] tmp;
+                ReturnCode tmp;
 
                 foreach (IRunnable basic in basics)
                 {
-                    //逐句執行, 並保存結果
+                    //逐句執行
                     tmp = basic.Run();
-                    foreach (ReturnCode code in tmp)
+                    if (tmp.Command != "")
                     {
-                        returns.Add(code);
+                        return tmp;
                     }
-
+                    
                 }
 
-                return returns.ToArray();
+                return new ReturnCode("", "");
             }
         }
 
@@ -247,7 +248,7 @@ namespace AZUSA
                 content = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //暫存運算結果
                 string check;
@@ -267,23 +268,23 @@ namespace AZUSA
                         }
                         else
                         {
-                            return new ReturnCode[] { new ReturnCode("", "") };
+                            return new ReturnCode("", "");
                         }
                     }
                     //否則回傳錯誤信息
                     else
                     {
-                        return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDBOOL"," is not a valid boolean.")+" [MUTAN, " + check + "]") };
+                        return new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDBOOL", " is not a valid boolean.") + " [MUTAN, " + check + "]");
                     }
                 }
                 //如果不是合法表達式則回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDEXPR"," is not a valid expression.")+" [MUTAN, " + check + "]") };
+                    return new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + check + "]");
                 }
             }
         }
-        
+
 
         // loop 的物件
         //The loop statement
@@ -303,10 +304,11 @@ namespace AZUSA
                 content = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
-                //回傳 LOOP 指令, 讓 AZUSA 創建循環線程
-                return new ReturnCode[] { new ReturnCode("LOOP", content) };
+                //創建循環線程
+                ThreadManager.AddLoop(content.Split('\n'));
+                return new ReturnCode("", "");
             }
         }
 
@@ -327,10 +329,11 @@ namespace AZUSA
                 content = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
-                //回傳 WAITFORRESP 指令, 讓 AZUSA 等待回應然後執行反應
-                return new ReturnCode[] { new ReturnCode("WAITFORRESP", content) };
+                //執行 WAITFORRESP 指令, 讓 AZUSA 等待回應然後執行反應
+                Internals.Execute("WAITFORRESP", content);
+                return new ReturnCode("", "");
             }
         }
 
@@ -361,13 +364,13 @@ namespace AZUSA
                 ////the last line contains only a '}' and can be ignored
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //The block is not executed, it can only be called
                 //We include this definition to let parser know it is a valid syntax
                 //when executed the content of block is passed directly
 
-                return new ReturnCode[] { new ReturnCode("", "") };
+                return new ReturnCode("", "");
             }
 
 
@@ -395,7 +398,7 @@ namespace AZUSA
                 content = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //暫存內容
                 string arg = "";
@@ -405,7 +408,8 @@ namespace AZUSA
                     arg += line + "\n";
                 }
                 //利用 WAITFORRESP 指令等待回應然後執行反應
-                return new ReturnCode[] { new ReturnCode("WAITFORRESP", arg) };
+                Internals.Execute("WAITFORRESP", arg);
+                return new ReturnCode("", "");
             }
         }
 
@@ -442,7 +446,7 @@ namespace AZUSA
                 objects = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //暫存運算結果
                 string check;
@@ -461,38 +465,34 @@ namespace AZUSA
                         {
                             //暫存執行結果
                             List<ReturnCode> returns = new List<ReturnCode>();
-                            ReturnCode[] tmp;
+                            ReturnCode tmp;
 
                             //執行內容
                             foreach (IRunnable obj in objects)
                             {
                                 tmp = obj.Run();
 
-                                foreach (ReturnCode code in tmp)
+                                if (tmp.Command != "")
                                 {
-                                    returns.Add(code);
+                                    return tmp;
                                 }
 
                             }
+                        }
 
-                            return returns.ToArray();
-                        }
-                        //否則如果條件運算成 false, 就不用執行, 回傳空白
-                        else
-                        {
-                            return new ReturnCode[] { new ReturnCode("", "") };
-                        }
+                        return new ReturnCode("", "");
+                        
                     }
                     //如果不是布林值, 回傳錯誤信息
                     else
                     {
-                        return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDBOOL", " is not a valid boolean.") + " [MUTAN, " + check + "]") };
+                        return new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDBOOL", " is not a valid boolean.") + " [MUTAN, " + check + "]");
                     }
                 }
                 //如果無法運算, 回傳錯誤信息
                 else
                 {
-                    return new ReturnCode[] { new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + check + "]") };
+                    return new ReturnCode("ERR", condition + Localization.GetMessage("INVALIDEXPR", " is not a valid expression.") + " [MUTAN, " + check + "]");
                 }
             }
         }
@@ -521,17 +521,11 @@ namespace AZUSA
                 content = null;
             }
 
-            public ReturnCode[] Run()
-            {
-                //暫存內容
-                string arg = "";
-                foreach (string line in content)
-                {
-                    //每一句用 /n 分隔
-                    arg += line + "\n";
-                }
-                //利用 MLOOP 指令創建循環線程
-                return new ReturnCode[] { new ReturnCode("LOOP", arg) };
+            public ReturnCode Run()
+            {                
+                //創建循環線程
+                ThreadManager.AddLoop(content);
+                return new ReturnCode("", "");
             }
         }
 
@@ -553,27 +547,24 @@ namespace AZUSA
                 objects = null;
             }
 
-            public ReturnCode[] Run()
+            public ReturnCode Run()
             {
                 //暫存執行結果
                 List<ReturnCode> returns = new List<ReturnCode>();
-                ReturnCode[] tmp;
+                ReturnCode tmp;
 
-                //執行內容並保存回傳
+                //執行內容
                 foreach (IRunnable obj in objects)
                 {
                     tmp = obj.Run();
-                    foreach (ReturnCode code in tmp)
+                    if (tmp.Command != "")
                     {
-                        returns.Add(code);
+                        return tmp;
                     }
 
                 }
 
-                //清理中途生成的暫存變量
-                Variables.CleanUp();
-
-                return returns.ToArray();
+                return new ReturnCode("", "");
             }
 
         }

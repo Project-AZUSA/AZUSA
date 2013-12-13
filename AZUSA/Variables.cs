@@ -171,11 +171,9 @@ namespace AZUSA
                     storage.Add(name, val);
                 }
 
-                if (!name.StartsWith("$TMP_"))
-                {
-                    //activity log
-                    ActivityLog.Add("Value of " + name + " has been changed to " + val);
-                }
+                //activity log
+                ActivityLog.Add("Value of " + name + " has been changed to " + val);
+
             }
         }
 
@@ -186,7 +184,7 @@ namespace AZUSA
             //interrupt for date time variables
             if (name.StartsWith("{") && name.EndsWith("}") && !name.Contains('+')) { return true; }
             //否則就返回是否環境是否存在這變量
-            return storage.ContainsKey(name) || storage.ContainsKey("$TMP_" + name);
+            return storage.ContainsKey(name);
         }
 
         //讀取變量
@@ -202,7 +200,7 @@ namespace AZUSA
             {
                 string url = name.Substring(1, name.Length - 2);
 
-                WebRequest req = WebRequest.Create(url);               
+                WebRequest req = WebRequest.Create(url);
                 using (StreamReader sw = new StreamReader(req.GetResponse().GetResponseStream()))
                 {
                     return sw.ReadToEnd();
@@ -218,26 +216,7 @@ namespace AZUSA
             //否則就返回變量環境裡的值
             else
             {
-                if (Exist("$TMP_" + name))
-                {
-                    return storage["$TMP_" + name];
-                }
-                else
-                {
-                    return storage[name];
-                }
-            }
-        }
-
-        static public void CleanUp()
-        {
-            lock (variableMUTEX)
-            {
-                string[] TMP = storage.Where(p => p.Key.StartsWith("$TMP_")).Select(p => p.Key).ToArray();
-                foreach (string tmp in TMP)
-                {
-                    storage.Remove(tmp);
-                }
+                return storage[name];
             }
         }
     }

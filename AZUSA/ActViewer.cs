@@ -67,9 +67,11 @@ namespace AZUSA
                     return;
                 }
 
-                foreach (MUTAN.ReturnCode code in obj.Run())
+                MUTAN.ReturnCode tmp = obj.Run();
+
+                if (tmp.Command != "")
                 {
-                    Internals.Execute(code.Command, code.Argument);
+                    Internals.Execute(tmp.Command, tmp.Argument);
                 }
             }
 

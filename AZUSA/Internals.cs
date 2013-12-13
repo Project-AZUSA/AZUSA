@@ -49,11 +49,11 @@ namespace AZUSA
             itmEXIT.Click += new EventHandler(itmEXIT_Click);
             MenuItem sep = new MenuItem("-");
 
-            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmActivity,sep, itmRELD ,itmEXIT});
+            ContextMenu menu = new ContextMenu(new MenuItem[] { itmMonitor, itmActivity, sep, itmRELD, itmEXIT });
 
             //把圖標右擊菜單設成上面創建的菜單
             notifyIcon.ContextMenu = menu;
-            
+
             //搜索 Engines\ 底下的所有執行檔, SearchOption.AllDirectories 表示子目錄也在搜索範圍內
             //Start the engines
             string EngPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + @"\Engines";
@@ -187,17 +187,17 @@ namespace AZUSA
         //增加右鍵選單的選項
         static public void ADDMENUITEM(string name)
         {
-            MenuItem itm = new MenuItem(Localization.GetMessage(name,name));
-            itm.Name=name;
-            itm.Click+=new EventHandler(itm_Click);
+            MenuItem itm = new MenuItem(Localization.GetMessage(name, name));
+            itm.Name = name;
+            itm.Click += new EventHandler(itm_Click);
 
             if (notifyIcon.ContextMenu.MenuItems.Count == 5)
             {
                 notifyIcon.ContextMenu.MenuItems.Add(3, new MenuItem("-"));
             }
 
-            notifyIcon.ContextMenu.MenuItems.Add(3,itm);
-            
+            notifyIcon.ContextMenu.MenuItems.Add(3, itm);
+
         }
 
         static void itm_Click(object sender, EventArgs e)
@@ -221,17 +221,6 @@ namespace AZUSA
             //Internal commands
             switch (cmd)
             {
-                // VAR(ID=val) 寫入變量
-                case "VAR":
-                    string ID = arg.Split('=')[0];
-                    string val = arg.Replace(ID + "=", "");
-                    ID = ID.Trim();
-                    Variables.Write(ID, val);
-                    break;
-                // LOOP({block}) 創建多行循環線程
-                case "LOOP":
-                    ThreadManager.AddLoop(arg.Split('\n'));
-                    break;
                 // BROADCAST({expr}) 向所有引擎廣播消息
                 case "BROADCAST":
                     ProcessManager.Broadcast(arg);
@@ -255,8 +244,8 @@ namespace AZUSA
                     string patharg = arg.Split(',')[0];
                     bool isapp = Convert.ToBoolean(arg.Replace(patharg + ",", ""));
                     patharg = patharg.Trim();
-                    string path=patharg.Split('$')[0];
-                    string Arg=patharg.Replace(path+"$","");
+                    string path = patharg.Split('$')[0];
+                    string Arg = patharg.Replace(path + "$", "");
 
                     ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
                     break;
@@ -301,22 +290,13 @@ namespace AZUSA
                     //否則就報錯
                     if (obj != null)
                     {
+                        MUTAN.ReturnCode tmp = obj.Run();
 
-                        foreach (MUTAN.ReturnCode code in obj.Run())
+                        if (tmp.Command != "END")
                         {
-                            //中止執行
-                            if (code.Command == "END")
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                Execute(code.Command, code.Argument);
-                            }
+                            Execute(tmp.Command, tmp.Argument);
                         }
 
-                        //清理解析生成的暫存變量
-                        Variables.CleanUp();
 
                         //扔掉物件
                         obj = null;
@@ -333,7 +313,7 @@ namespace AZUSA
                     //通知引擎 (主要是針對 AI) 現在正等待回應
                     ProcessManager.Broadcast("WaitingForResp");
 
-                    respCache = arg;                    
+                    respCache = arg;
                     break;
                 // 作出反應
                 case "MAKERESP":
@@ -358,20 +338,13 @@ namespace AZUSA
                     //否則就報錯
                     if (obj != null)
                     {
-                        foreach (MUTAN.ReturnCode code in obj.Run())
+                        MUTAN.ReturnCode tmp = obj.Run();
+
+                        if (tmp.Command != "END")
                         {
-                            //中止執行
-                            if (code.Command == "END")
-                            {
-                                break;
-                            }
-                            else
-                            {
-                            //一般其他指令
-                                Execute(code.Command, code.Argument);
-                            }
+                            Execute(tmp.Command, tmp.Argument);
                         }
-                        
+
                         //扔掉物件
                         obj = null;
                     }

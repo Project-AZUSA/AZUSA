@@ -316,8 +316,155 @@ namespace AZUSA
                 return;
             }
 
-            //否則先假設是 MUTAN 指令,嘗試解析, 如果失敗的話, 就無視掉本次輸出
-            //If no then assume it is a MUTAN command and try parsing, if failed to parse, ignore.
+
+            //首先假設是溝通用的指令, 主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令  
+            //對字串分割並去掉多餘空白
+            string RID = e.Data.Split('(')[0];
+            string arg = e.Data.Substring(RID.Length + 1, e.Data.Length - RID.Length - 2);
+            RID = RID.Trim();
+                      
+            switch (RID)
+            {
+                //這是用來進入除錯模式的, 除錯模式下不會要求完備性
+                case "DEBUG":
+                    Internals.Debugging = true;
+                    Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
+                    return;
+                //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
+                case "GetAzusaPid":
+                    Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);
+
+                    //activity log
+                    ActivityLog.Add("To " + Name + ": " + Process.GetCurrentProcess().Id);
+
+                    return;
+                //這是讓進程宣佈自己的身份的, 這指令應該是進程完成各種初始化之後才用的
+                case "RegisterAs":
+                    //先記錄現在是否完備
+                    bool tmp = ProcessManager.CheckCompleteness();
+
+                    //然後進行相應的登錄
+                    switch (arg)
+                    {
+                        case "AI":
+                            currentType = PortType.AI;
+                            ProcessManager.AIPid.Add(pid);
+                            break;
+                        case "Input":
+                            currentType = PortType.Input;
+                            ProcessManager.InputPid.Add(pid);
+                            break;
+                        case "Output":
+                            currentType = PortType.Output;
+                            ProcessManager.OutputPid.Add(pid);
+                            break;
+                        case "Application":
+                            this.IsApplication = true;
+                            break;
+                        default:
+                            break;
+                    }
+
+                    //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
+                    if (!tmp && ProcessManager.CheckCompleteness())
+                    {
+                        Internals.MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
+                    }
+
+                    return;
+                //這是讓進程宣佈自己的可連接的接口, AZUSA 記錄後可以轉告其他進程, 進程之間可以直接對接而不必經 AZUSA
+                case "RegisterPort":
+                    ProcessManager.Ports.Add(arg, currentType);
+                    this.Ports.Add(arg);
+                    ProcessManager.Broadcast("PortHasChanged");
+                    return;
+                //這是讓進程取得當前可用所有端口
+                case "GetAllPorts":
+                    string result = "";
+                    foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
+                    {
+                        result += port.Key + ",";
+                    }
+                    Engine.StandardInput.WriteLine(result.Trim(','));
+
+                    //activity log
+                    ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
+                    return;
+                //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
+                case "GetAIPorts":
+                    result = "";
+                    foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
+                    {
+                        if (port.Value == PortType.AI)
+                        {
+
+                            result += port.Key + ",";
+
+                        }
+                    }
+
+                    Engine.StandardInput.WriteLine(result.Trim(','));
+
+                    //activity log
+                    ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
+                    return;
+                //這是讓進程取得當前可用的輸入端口(輸入引擎的接口)
+                case "GetInputPorts":
+                    result = "";
+                    foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
+                    {
+                        if (port.Value == PortType.Input)
+                        {
+
+                            result += port.Key + ",";
+
+                        }
+                    }
+
+                    Engine.StandardInput.WriteLine(result.Trim(','));
+
+                    //activity log
+                    ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
+                    return;
+                //這是讓進程取得當前可用的輸出端口(輸出引擎的接口)
+                case "GetOutputPorts":
+                    result = "";
+                    foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
+                    {
+                        if (port.Value == PortType.Output)
+                        {
+
+                            result += port.Key + ",";
+
+                        }
+                    }
+
+                    Engine.StandardInput.WriteLine(result.Trim(','));
+
+                    //activity log
+                    ActivityLog.Add("To " + Name + ": " + result.Trim(','));
+
+                    return;
+                //這是讓進程可以宣佈自己責負甚麼函式, AZUSA 在接收到這種函件就會轉發給進程
+                //函式接管不是唯一的, 可以同時有多個進程接管同一個函式, AZUSA 會每個宣告了接管的進程都轉發一遍
+                case "LinkRID":
+                    string[] parsed = arg.Split(',');
+
+                    this.RIDs.Add(parsed[0], Convert.ToBoolean(parsed[1]));
+
+                    return;
+                //添加右鍵選單項目
+                case "AddMenuItem":
+                    Internals.ADDMENUITEM(arg);
+                    return;                
+                default:
+                    break;
+            }
+
+            //否則假設是 MUTAN 指令,嘗試解析, 如果失敗的話, 就無視掉本次輸出
 
             //先創建一個可運行物件, 用來儲存解析結果
             MUTAN.IRunnable obj;
@@ -326,168 +473,12 @@ namespace AZUSA
             if (MUTAN.LineParser.TryParse(e.Data, out obj))
             {
                 //如果成功解析, 則運行物件, 獲取回傳碼
-                MUTAN.ReturnCode[] returns = obj.Run();
-
-                //清理解析生成的暫存變量
-                Variables.CleanUp();
+                MUTAN.ReturnCode tmp = obj.Run();         
 
                 //然後按回傳碼執行指令
-                foreach (MUTAN.ReturnCode code in returns)
+                if (tmp.Command != "")
                 {
-                    //首先是 溝通用的指令, 主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令
-                    //Handle protocol related commands, leave the rest to AZUSA internals
-                    switch (code.Command)
-                    {
-                        //這是用來進入除錯模式的, 除錯模式下不會要求完備性
-                        case "DEBUG":                            
-                            Internals.Debugging = true;
-                            Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
-                            break;
-                        //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
-                        case "GetAzusaPid":
-                            Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);
-
-                            //activity log
-                            ActivityLog.Add("To " + Name + ": " + Process.GetCurrentProcess().Id);
-
-                            break;
-                        //這是讓進程宣佈自己的身份的, 這指令應該是進程完成各種初始化之後才用的
-                        case "RegisterAs":
-                            //先記錄現在是否完備
-                            bool tmp = ProcessManager.CheckCompleteness();
-
-                            //然後進行相應的登錄
-                            switch (code.Argument)
-                            {
-                                case "AI":
-                                    currentType = PortType.AI;
-                                    ProcessManager.AIPid.Add(pid);
-                                    break;
-                                case "Input":
-                                    currentType = PortType.Input;
-                                    ProcessManager.InputPid.Add(pid);
-                                    break;
-                                case "Output":
-                                    currentType = PortType.Output;
-                                    ProcessManager.OutputPid.Add(pid);
-                                    break;
-                                case "Application":
-                                    this.IsApplication = true;
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                            //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
-                            if (!tmp && ProcessManager.CheckCompleteness())
-                            {
-                                Internals.MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
-                            }
-
-                            break;
-                        //這是讓進程宣佈自己的可連接的接口, AZUSA 記錄後可以轉告其他進程, 進程之間可以直接對接而不必經 AZUSA
-                        case "RegisterPort":
-                            ProcessManager.Ports.Add(code.Argument, currentType);
-                            this.Ports.Add(code.Argument);
-                            ProcessManager.Broadcast("PortHasChanged");
-                            break;
-                        //這是讓進程取得當前可用所有端口
-                        case "GetAllPorts":
-                            string result = "";
-                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
-                            {
-                                result += port.Key + ",";
-                            }
-                            Engine.StandardInput.WriteLine(result.Trim(','));
-
-                            //activity log
-                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
-                            break;
-                        //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
-                        case "GetAIPorts":
-                            result = "";
-                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
-                            {
-                                if (port.Value == PortType.AI)
-                                {
-
-                                    result += port.Key + ",";
-
-                                }
-                            }
-
-                            Engine.StandardInput.WriteLine(result.Trim(','));
-
-                            //activity log
-                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
-                            break;
-                        //這是讓進程取得當前可用的輸入端口(輸入引擎的接口)
-                        case "GetInputPorts":
-                            result = "";
-                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
-                            {
-                                if (port.Value == PortType.Input)
-                                {
-
-                                    result += port.Key + ",";
-
-                                }
-                            }
-
-                            Engine.StandardInput.WriteLine(result.Trim(','));
-
-                            //activity log
-                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
-                            break;
-                        //這是讓進程取得當前可用的輸出端口(輸出引擎的接口)
-                        case "GetOutputPorts":
-                            result = "";
-                            foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
-                            {
-                                if (port.Value == PortType.Output)
-                                {
-
-                                    result += port.Key + ",";
-
-                                }
-                            }
-
-                            Engine.StandardInput.WriteLine(result.Trim(','));
-
-                            //activity log
-                            ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
-                            break;
-                        //這是讓進程可以宣佈自己責負甚麼函式, AZUSA 在接收到這種函件就會轉發給進程
-                        //函式接管不是唯一的, 可以同時有多個進程接管同一個函式, AZUSA 會每個宣告了接管的進程都轉發一遍
-                        case "LinkRID":
-                            string[] parsed = code.Argument.Split(',');
-
-                            this.RIDs.Add(parsed[0], Convert.ToBoolean(parsed[1]));
-
-                            break;
-                        //添加右鍵選單項目
-                        case "AddMenuItem":
-                            Internals.ADDMENUITEM(code.Argument);
-                            break;
-                        //如果不是上面的 NYAN 指令組的指令的話, 就要判斷 AZUSA 是否完整 (AI, 輸入, 輸出)
-                        //如果完整就把指令傳達到內部執行
-                        //否則的話為避免出錯, AZUSA 會無視掉
-                        default:
-                            if (ProcessManager.CheckCompleteness())
-                            {
-                                Internals.Execute(code.Command, code.Argument);
-                            }
-                            else
-                            {
-                                Internals.ERROR(Localization.GetMessage("ENGINEMISSING", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered."));
-                            }
-
-                            break;
-                    }
+                    Internals.Execute(tmp.Command, tmp.Argument);
                 }
             }
 
