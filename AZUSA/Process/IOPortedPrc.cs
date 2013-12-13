@@ -316,12 +316,18 @@ namespace AZUSA
                 return;
             }
 
+            string RID="";
+            string arg="";
 
             //首先假設是溝通用的指令, 主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令  
             //對字串分割並去掉多餘空白
-            string RID = e.Data.Split('(')[0];
-            string arg = e.Data.Substring(RID.Length + 1, e.Data.Length - RID.Length - 2);
-            RID = RID.Trim();
+            if (MUTAN.IsExec(e.Data))
+            {
+                RID = e.Data.Split('(')[0];
+                arg = e.Data.Substring(RID.Length + 1, e.Data.Length - RID.Length - 2);
+                RID = RID.Trim();
+            }
+                
                       
             switch (RID)
             {
@@ -374,8 +380,8 @@ namespace AZUSA
                     return;
                 //這是讓進程宣佈自己的可連接的接口, AZUSA 記錄後可以轉告其他進程, 進程之間可以直接對接而不必經 AZUSA
                 case "RegisterPort":
-                    ProcessManager.Ports.Add(arg, currentType);
-                    this.Ports.Add(arg);
+                    ProcessManager.Ports.Add(arg.Trim('"'), currentType);
+                    this.Ports.Add(arg.Trim('"'));
                     ProcessManager.Broadcast("PortHasChanged");
                     return;
                 //這是讓進程取得當前可用所有端口
