@@ -417,37 +417,96 @@
 
 然後就會進入第二個回應區塊, 視乎使用者回應 "TRUE" (是) 或 "FALSE" (否), 會重新執行這個腳本, 或者發出提示。
 
+
+以下我們會看一下如何對 AZUSA 進行擴充。函件和引擎的具體設計和製作屬於相對進階的內容, 在入門教程這一部分會比較簡短。
+
+函式
+----
+ AZUSA 提供的內建指令十分有限, 可幸的是指令是可以自由擴充的。擴充的方法有兩種, 一種是引擎登記接管, 另一種是函式。我們先介紹後一種。函式可以是一個執行檔 (.exe), 批次檔 (.bat), 或者是VB腳本 (.vbs)。函式一律存放在 "Routines" 目錄底下。
+ 
+比如說 "Routines" 底下有一個叫 "SAY.exe" (或 "SAY.bat", 或 "SAY.vbs") 的執行檔, 那麼我們可以用 "SAY(something)" 的指令調用它, 格式是跟內建指令一樣的。而括號內的東西 ("something") 會成為執行參數。換言之, "SAY(something)" 的作用就跟 "SAY.exe something" 一樣。
+
+函式可以透過標準輸入輸出流 (Standard I/O streams) 與 AZUSA 進行溝通, 溝通的語言就是 MUTAN, 關於這一點在引擎的部分會再講。
+
 引擎
 ----
 
+ AZUSA 雖然是搭建虛擬角色的一個重要部分, 可單單只有 AZUSA 核是不夠的。我們還需要至少三個部件, 輸入, 處理, 和表現。輸入層比如語音識別或者視像輸入可以理解成角色的感官。處理層比如各種 AI 引擎負責整合各種輸入和角色當前的狀態以決定角色行為。表現屠比如各種動畫界面和語音輸出負責表現角色的表情, 動作, 行為等。
+ 
+所有的這些部件我們統稱為引擎。引擎是執行檔, 透過標準輸入輸出流 (Standard I/O streams) 與 AZUSA 進行溝通。AZUSA 在啟動時會將所有 "Engines" 目錄下的執行檔 (.exe) 視為引擎而載入。
+
+引擎希望 AZUSA 執行某動作的話只需要利用標準輸出發送相應的指令便可。以 C# 為例, 如果我們想 AZUSA 對發出提示信息的話只要用 
+
+	Console.WriteLine("MSG(喵~)");
+
+就可以了。
+
+引擎還可以作出詢問, 比如
+
+	Console.WriteLine("$心情?");
+	string feeling = Console.ReadLine();
+	
+就可以設 "feeling" 的值為 "$心情" 的值。
+
+引擎還有一組專用指令, 是用來作各種宣告和登錄的。引擎初始化後應該向 AZUSA 發送 "RegisterAs" 指令進行登錄, 讓 AZUSA 知道這個引擎是幹甚麼的。另外還可以利用 "LinkRID" 指令接管指令, 比如你希望增加一個 "PlaySound" 指令, 然後 AZUSA 收到的所有 "PlaySound" 指令都由你的引擎處理, 就可以發送
+
+	LinkRID(PlaySound,false)
+
+向 AZUSA 登記接管 "PlaySound" 指令。後面的 "false" 是指 AZUSA 在轉發指令時應該轉發完整的指令, 比如執行 "PlaySound(something)" 的話就向引擎發送 "PlaySound(something)"。如果引擎只接管一個指令的話那麼這是不必要的, 只用轉發參數就可以了, 那麼就應該把後面的 "false" 改成 "true", AZUSA 就只會轉發參數, 比如 "something"。
+
+如果同時有多個引擎接管同一個指令, AZUSA 會向所有接管了的引擎都發送一遍。
+
+引擎與引擎之間的溝通一般是利用 ZMQ 端口達成的, AZUSA 提供了端口登錄和查詢的指令, 讓引擎透過 AZUSA 可以知道可用的端口位置。這一部分的內容在此先不多說。
 
 內建指令一覽
 ------------
-* BROADCAST
-* DEBUG
-* ERR (可接管)
-* EXEC
-* EXIT
-* MAKERESP
-* MSG (可接管)
-* RESTART
-* SCRIPT
-* WAIT
+* BROADCAST(text)
+  作用: 向所有發送信息 text 。
+* ERR(text) (可接管) 
+  作用: 透過圖標顯示錯誤信息 text。
+* EXEC(filepath[$arg], true/false)
+  作用: 透過 AZUSA 執行路徑為 filepath 的執行檔 (可加 "$" 號附帶執行參數), 後面的 true/false 表示是否應用程序。
+* EXIT()
+  作用: 退出 AZUSA。
+* MAKERESP()
+  作用: 執行當前回應區塊 (如有)。
+* MSG(text) (可接管)
+  作用: 透過圖標顯示信息 text。
+* RESTART()
+  作用: 重啟 AZUSA。
+* SCRIPT(name)
+  作用: 執行 "Scripts" 目錄下名為 name.mut 的腳本檔。
+* WAIT(time)
+  作用: 暫停 time 毫秒。
 
 引擎專用指令一覽
 --------------
-* AddMenuItem
-* GetAzusaPid
-* GetAllPorts
-* GetAIPorts
-* GetInputPorts
-* GetOutputPorts
-* LinkRID
+* DEBUG()
+  作用: 進入除錯模式
+* AddMenuItem(text)
+  作用: 新增名為 text 右鍵選單項目, 被點擊的話會向所有引擎廣播 text。
+* GetAzusaPid()
+  作用: 返回 AZUSA 主進程的 ID。
+* GetAllPorts()
+  作用: 返回所有已登錄的端口地址, 以 "," 分隔。
+* GetAIPorts()
+  作用: 返回所有由 AI 引擎登錄的端口地址, 以 "," 分隔。
+* GetInputPorts()
+  作用: 返回所有由輸入引擎登錄的端口地址, 以 "," 分隔。
+* GetOutputPorts()
+  作用: 返回所有由輸出引擎登錄的端口地址, 以 "," 分隔。
+* LinkRID(command, true/false)
+  作用: 接管 command 指令, 後面的 true/false 表示是否只需要參數。
 * RegisterAs(AI/Output/Input/Application)
-* RegisterPort
+  作用: 將引擎登錄成 AI (處理) 或 Output (輸出/表現) 或 Input (輸入) 或 Application (應用)
+* RegisterPort(uri)
+  作用: 登錄開放端口 uri (例: tcp://127.0.0.1:1111), 登錄後別的引擎可以查詢得到從而嘗試連接
 
 消息通知一覽
 ------------
 * PortHasChanged
+  作用: 表示已登錄的端口有變, 引擎收到此通知應重新查詢端口的情況並調整連接。
 * Responded
+  作用: 表示回應已被執行
 * WaitingForResp
+  作用: 表示 AZUSA 正在等待回應
