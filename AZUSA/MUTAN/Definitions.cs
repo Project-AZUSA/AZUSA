@@ -295,7 +295,7 @@ namespace AZUSA
             if (lines[0].Trim().EndsWith("{") && lines[lines.Length - 1].Trim() == "}")
             {
                 //取得條件
-                string cond = lines[0].Trim().Trim('{');
+                string cond = lines[0].Trim().TrimEnd('{');
 
                 //暫存運算結果
                 string tmp;

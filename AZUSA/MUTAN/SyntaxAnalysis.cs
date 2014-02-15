@@ -635,6 +635,8 @@ namespace AZUSA
                     else
                     {
                         tmp.Add(ln);
+
+                        continue;
                     }
                 }
 
