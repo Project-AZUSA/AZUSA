@@ -29,6 +29,8 @@ namespace AZUSA
             //Load all the variables            
             Variables.Load(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\DATA");
 
+            Variables.Write("$SYS_READY", "FALSE");
+
             //載入提示信息
             Localization.Initialize();
 
@@ -82,7 +84,7 @@ namespace AZUSA
 
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
             MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
-
+            
 
         }
 
