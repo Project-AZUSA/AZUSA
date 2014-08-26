@@ -43,13 +43,14 @@ namespace AZUSA
         public Dictionary<string, bool> RIDs = new Dictionary<string, bool>();
 
 
-        public IOPortedPrc(string name, string enginePath, string arg = "")
+        public IOPortedPrc(string name, string enginePath, string arg = "", bool isApp = false)
         {
             //名字
             Name = name;
 
             //路徑
             path = enginePath;
+
 
             //這裡是創建進程實體的部分
             //specifies the way the recognizer is run
@@ -60,12 +61,14 @@ namespace AZUSA
             //把進程的工作路徑設成進程本身的路徑, 而不是預設的 AZUSA 的路徑
             Engine.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(path);
 
+
             //這三行會讓進程被隱藏起來
             //如果不進行隱藏的話, AZUSA 是不能接管其輸入輸出
             //這大概是 .Net 的限制
             Engine.StartInfo.UseShellExecute = false;
             Engine.StartInfo.CreateNoWindow = true;
             Engine.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
 
 
             //接管輸入輸出
@@ -316,8 +319,8 @@ namespace AZUSA
                 return;
             }
 
-            string RID="";
-            string arg="";
+            string RID = "";
+            string arg = "";
 
             //首先假設是溝通用的指令, 主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令  
             //對字串分割並去掉多餘空白
@@ -327,8 +330,8 @@ namespace AZUSA
                 arg = e.Data.Substring(RID.Length + 1, e.Data.Length - RID.Length - 2);
                 RID = RID.Trim();
             }
-                
-                      
+
+
             switch (RID)
             {
                 //這是用來進入除錯模式的, 除錯模式下不會要求完備性
@@ -466,7 +469,7 @@ namespace AZUSA
                 //添加右鍵選單項目
                 case "AddMenuItem":
                     Internals.ADDMENUITEM(arg);
-                    return;                
+                    return;
                 default:
                     break;
             }
@@ -480,7 +483,7 @@ namespace AZUSA
             if (MUTAN.LineParser.TryParse(e.Data, out obj))
             {
                 //如果成功解析, 則運行物件, 獲取回傳碼
-                MUTAN.ReturnCode tmp = obj.Run();         
+                MUTAN.ReturnCode tmp = obj.Run();
 
                 //然後按回傳碼執行指令
                 if (tmp.Command != "")
