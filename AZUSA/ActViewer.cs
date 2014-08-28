@@ -77,6 +77,12 @@ namespace AZUSA
 
         }
 
+        private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            string head=listBox1.SelectedItem.ToString().Split(':')[0]+":";
+            textBox1.Text=listBox1.SelectedItem.ToString().Replace(head,"").Trim();
+        }
+
        
 
     }
