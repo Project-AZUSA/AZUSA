@@ -251,7 +251,7 @@ namespace AZUSA
                     break;
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
-                    string patharg = arg;
+                    string patharg = arg.Replace("{AZUSA}",Environment.CurrentDirectory);
                     bool isapp;
                     if (arg.Contains(','))
                     {
@@ -271,6 +271,10 @@ namespace AZUSA
                     }
 
                     ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
+                    break;
+                // KILL(prcName) 終止進程
+                case "KILL":
+                    ProcessManager.Kill(arg);
                     break;
                 // SCRIPT({SID(.part)}) 執行腳本檔
                 case "SCRIPT":

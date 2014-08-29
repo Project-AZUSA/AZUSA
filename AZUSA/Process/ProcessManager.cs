@@ -83,6 +83,24 @@ namespace AZUSA
 
         }
 
+        //通知所有進程退出
+        static public void Kill(string NAME)
+        {
+            List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(CurrentProcesses);
+
+            foreach (IOPortedPrc prc in ListCopy)
+            {
+                if (prc.Name==NAME)
+                {
+                    prc.End();
+                }
+            }
+
+            //扔掉 ListCopy
+            ListCopy = null;
+
+        }
+
         //對進程進行廣播
         static public void Broadcast(string msg)
         {            
