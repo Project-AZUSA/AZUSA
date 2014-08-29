@@ -81,6 +81,17 @@ namespace AZUSA
         {
             string head=listBox1.SelectedItem.ToString().Split(':')[0]+":";
             textBox1.Text=listBox1.SelectedItem.ToString().Replace(head,"").Trim();
+            textBox1.Focus();
+        }
+
+        private void listBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                string head = listBox1.SelectedItem.ToString().Split(':')[0] + ":";
+                textBox1.Text = listBox1.SelectedItem.ToString().Replace(head, "").Trim();
+                textBox1.Focus();
+            }
         }
 
        
