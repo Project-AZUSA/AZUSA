@@ -233,13 +233,21 @@ namespace AZUSA
                     new Thread(new ThreadStart(EXIT)).Start();
                     break;
                 // RESTART() 重啟程序
-                case "RESTART":
+                case "RESTART": 
                     //創建一個負責重啟的線程
                     new Thread(new ThreadStart(RESTART)).Start();
                     break;
                 // WAIT({int}) 暫停線程
                 case "WAIT":
                     System.Threading.Thread.Sleep(Convert.ToInt32(arg));
+                    break;
+                // ACTVIEW() 打開活動檢視器
+                case "ACTVIEW":
+                    itmActivity_Click(null,EventArgs.Empty);
+                    break;
+                // PRCMON() 打開進程檢視器
+                case "PRCMON":
+                    itmMonitor_Click(null, EventArgs.Empty);
                     break;
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
