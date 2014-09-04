@@ -108,7 +108,10 @@ namespace AZUSA
 
             foreach (IOPortedPrc prc in ListCopy)
             {
-                prc.Input.WriteLine(msg);
+                if (!prc.NoBroadcast)
+                {
+                    prc.Input.WriteLine(msg);
+                }
 
                 //activity log
                 ActivityLog.Add("To " + prc.Name + ": "+msg);

@@ -35,6 +35,9 @@ namespace AZUSA
         //進程負責的接口
         List<string> Ports = new List<string>();
 
+        //不接收廣播
+        public bool NoBroadcast = false;
+
 
         //進程可以接管指令
         //RIDs 記錄的是進程接管的指令
@@ -112,7 +115,8 @@ namespace AZUSA
         //啟動進程
         public void Start()
         {
-            Engine.Start();
+           
+            Engine.Start();           
 
             //開始聆聽引擎輸出
             Engine.BeginOutputReadLine();
@@ -390,6 +394,7 @@ namespace AZUSA
                     return;
                 //這是讓進程取得當前可用所有端口
                 case "GetAllPorts":
+                    NoBroadcast = true;
                     string result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -399,10 +404,11 @@ namespace AZUSA
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
+                    NoBroadcast = false;
                     return;
                 //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
                 case "GetAIPorts":
+                    NoBroadcast = true;
                     result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -418,10 +424,11 @@ namespace AZUSA
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
+                    NoBroadcast = false;
                     return;
                 //這是讓進程取得當前可用的輸入端口(輸入引擎的接口)
                 case "GetInputPorts":
+                    NoBroadcast = true;
                     result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -437,10 +444,11 @@ namespace AZUSA
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
+                    NoBroadcast = false;
                     return;
                 //這是讓進程取得當前可用的輸出端口(輸出引擎的接口)
                 case "GetOutputPorts":
+                    NoBroadcast = true;
                     result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -456,7 +464,7 @@ namespace AZUSA
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-
+                    NoBroadcast = false;
                     return;
                 //這是讓進程可以宣佈自己責負甚麼函式, AZUSA 在接收到這種函件就會轉發給進程
                 //函式接管不是唯一的, 可以同時有多個進程接管同一個函式, AZUSA 會每個宣告了接管的進程都轉發一遍

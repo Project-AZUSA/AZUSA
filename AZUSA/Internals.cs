@@ -346,6 +346,7 @@ namespace AZUSA
                 case "MAKERESP":
                     //把 $WAITFORRESP 設成 FALSE
                     Variables.Write("$WAITFORRESP", "FALSE");
+                    Variables.Write("$RESP", arg);
 
                     if (respCache == "")
                     {
@@ -353,7 +354,7 @@ namespace AZUSA
                     }
 
                     //通知引擎已作出反應
-                    ProcessManager.Broadcast("Responded");
+                    ProcessManager.Broadcast("RESPONDED");
 
                     //解析暫存
                     MUTAN.Parser.TryParse(respCache.Split('\n'), out obj);
