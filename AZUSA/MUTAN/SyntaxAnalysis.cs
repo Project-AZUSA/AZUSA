@@ -367,9 +367,9 @@ namespace AZUSA
 
                     //最後就是檢查邏輯"非"運算
                     //Negation spliting
-                    if (expr.StartsWith("~"))
+                    if (expr.StartsWith("!"))
                     {
-                        if (TryParse(expr.Trim('~'), out imd))
+                        if (TryParse(expr.Trim('!'), out imd))
                         {
                             result = Convert.ToString(!Convert.ToBoolean(imd));
                             return true;
