@@ -191,7 +191,7 @@ namespace AZUSA
         static public string Read(string name)
         {
             //因為字串內出現引號會導致解析錯誤, 所以定義了特殊變量
-            if (name == "{QUOT}")
+            if (name == "{\"}" || name=="{QUOT}")
             {
                 return "\"";
             }
@@ -206,6 +206,33 @@ namespace AZUSA
                     return sw.ReadToEnd();
                 }
 
+            }           
+            //函式回傳
+            else if (name.StartsWith("{") && name.EndsWith("}") && name.Contains("("))
+            {
+                name=name.Trim('{','}');
+                string cmd = name.Split('(')[0];
+                string arg = name.Remove(name.Length - 1).Replace(cmd + "(", "");
+
+
+                if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe"))
+                {
+                    IOPortedPrc prc = new IOPortedPrc(name, Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe", arg);
+                    return prc.StartAndGetOutput();
+                }
+                else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat"))
+                {
+                    IOPortedPrc prc = new IOPortedPrc(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
+                    return prc.StartAndGetOutput();
+                   
+                }
+                else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
+                {
+                    IOPortedPrc prc = new IOPortedPrc(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
+                    return prc.StartAndGetOutput();                    
+                }                
+
+                return name;
             }
             //日期時間
             else if (name.StartsWith("{") && name.EndsWith("}"))

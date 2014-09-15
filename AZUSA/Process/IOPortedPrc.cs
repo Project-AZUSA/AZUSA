@@ -129,6 +129,30 @@ namespace AZUSA
 
         }
 
+        string output="";
+
+        //啟動進程並取得回傳
+        public string StartAndGetOutput()
+        {
+            
+            Engine.Start();
+
+            //開始聆聽引擎輸出
+            Engine.BeginOutputReadLine();
+
+            //引擎輸入設為 AutoFlush 就不用每次寫入都要加一行 flush 了
+            Engine.StandardInput.AutoFlush = true;
+
+            //啟動後,取得進程的 ID
+            pid = Engine.Id;
+
+            //等待引擎退出
+            Engine.WaitForExit();
+
+            return output;
+
+        }
+
         //暫停處理引擎輸出
         public void Pause()
         {
@@ -343,13 +367,19 @@ namespace AZUSA
                     Internals.Debugging = true;
                     Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
                     return;
+                //進行回傳
+                case "Return":
+                    output = arg;
+                    return;
                 //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
                 case "GetAzusaPid":
-                    Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);
+                    NoBroadcast = true;
 
+                    Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);                    
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + Process.GetCurrentProcess().Id);
 
+                    NoBroadcast = false;
                     return;
                 //這是讓進程宣佈自己的身份的, 這指令應該是進程完成各種初始化之後才用的
                 case "RegisterAs":
@@ -400,7 +430,7 @@ namespace AZUSA
                     {
                         result += port.Key + ",";
                     }
-                    Engine.StandardInput.WriteLine(result.Trim(','));
+                    Engine.StandardInput.WriteLine(result.Trim(','));                    
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
@@ -420,7 +450,7 @@ namespace AZUSA
                         }
                     }
 
-                    Engine.StandardInput.WriteLine(result.Trim(','));
+                    Engine.StandardInput.WriteLine(result.Trim(','));                   
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));

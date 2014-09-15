@@ -71,6 +71,9 @@ namespace AZUSA
                 return;
             }
 
+            //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
+            //MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
+
 
             //每一個執行檔都添加為引擎
             foreach (string exePath in EngList)
@@ -80,10 +83,11 @@ namespace AZUSA
                 {
                     Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
                 }
+
+                Thread.Sleep(160);
             }
 
-            //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
-            MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
+            
             
 
         }
@@ -545,13 +549,14 @@ namespace AZUSA
                             //再找 bat (利用 bat 可以呼叫基本上任何直譯器調用任何腳本語言了)
                             if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat"))
                             {
+                                ActivityLog.Add("Calling \"" + "cmd.exe "+ "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg + "\"");
                                 ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
-                                //再找 vbs
+                            //再找 vbs
                             }
                             else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
                             {
                                 ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
-                                //都找不到就報錯
+                            //都找不到就報錯
                             }
                             else
                             {
