@@ -22,6 +22,9 @@ namespace AZUSA
         //記錄圖標是否被點擊, 利用這個變量可以透過圖標跟用戶進行簡單的交互
         static public bool Clicked = false;
 
+        //記錄完整架構是否成功初始化
+        static public bool SysReady = false;
+
         //初始化
         static public void INIT()
         {
@@ -97,6 +100,7 @@ namespace AZUSA
         {
             MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
             Variables.Write("$SYS_READY", "TRUE");
+            SysReady = true;
             if (File.Exists(Environment.CurrentDirectory + @"\Scripts\INIT.mut"))
             {
                 Execute("SCRIPT", "INIT");
@@ -181,8 +185,11 @@ namespace AZUSA
         {
             if (msg != "")
             {
-
-                notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Error);
+                //除錯模式才明示錯誤
+                if (Debugging)
+                {
+                    notifyIcon.ShowBalloonTip(5000, "AZUSA", msg, ToolTipIcon.Error);
+                }
 
                 //activity log
                 ActivityLog.Add("AZUSA: " + msg);
@@ -238,6 +245,12 @@ namespace AZUSA
             //Internal commands
             switch (cmd)
             {
+                // DEBUG() 開關除錯模式
+                case "DEBUG":
+                    Debugging = !Debugging;
+                    MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will display all errors and listen to all commands."));
+                    Variables.Write("$SYS_DEBUG", Debugging.ToString());
+                    break;
                 // BROADCAST({expr}) 向所有引擎廣播消息
                 case "BROADCAST":
                     ProcessManager.Broadcast(arg);
@@ -284,8 +297,15 @@ namespace AZUSA
                         path = patharg.Split('$')[0];
                         Arg = patharg.Replace(path + "$", "");
                     }
-
-                    ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
+                    if (path.EndsWith(".exe"))
+                    {
+                        ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Process.Start(path, arg);
+                    }
+                    
                     break;
                 // KILL(prcName) 終止進程
                 case "KILL":

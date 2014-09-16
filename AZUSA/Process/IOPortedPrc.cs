@@ -115,8 +115,8 @@ namespace AZUSA
         //啟動進程
         public void Start()
         {
-           
-            Engine.Start();           
+
+            Engine.Start();
 
             //開始聆聽引擎輸出
             Engine.BeginOutputReadLine();
@@ -129,12 +129,12 @@ namespace AZUSA
 
         }
 
-        string output="";
+        string output = "";
 
         //啟動進程並取得回傳
         public string StartAndGetOutput()
         {
-            
+
             Engine.Start();
 
             //開始聆聽引擎輸出
@@ -365,7 +365,8 @@ namespace AZUSA
                 //這是用來進入除錯模式的, 除錯模式下不會要求完備性
                 case "DEBUG":
                     Internals.Debugging = true;
-                    Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will now listen to all commands."));
+                    Variables.Write("$SYS_DEBUG", "TRUE");
+                    Internals.MESSAGE(Localization.GetMessage("DEBUG", "Entered debug mode. AZUSA will display all errors and listen to all commands."));
                     return;
                 //進行回傳
                 case "Return":
@@ -375,7 +376,7 @@ namespace AZUSA
                 case "GetAzusaPid":
                     NoBroadcast = true;
 
-                    Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);                    
+                    Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + Process.GetCurrentProcess().Id);
 
@@ -429,7 +430,7 @@ namespace AZUSA
                     {
                         result += port.Key + ",";
                     }
-                    Engine.StandardInput.WriteLine(result.Trim(','));                    
+                    Engine.StandardInput.WriteLine(result.Trim(','));
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
@@ -449,7 +450,7 @@ namespace AZUSA
                         }
                     }
 
-                    Engine.StandardInput.WriteLine(result.Trim(','));                   
+                    Engine.StandardInput.WriteLine(result.Trim(','));
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
@@ -511,21 +512,28 @@ namespace AZUSA
                     break;
             }
 
-            //否則假設是 MUTAN 指令,嘗試解析, 如果失敗的話, 就無視掉本次輸出
-
-            //先創建一個可運行物件, 用來儲存解析結果
-            MUTAN.IRunnable obj;
-
-            //然後用單行解析器
-            if (MUTAN.LineParser.TryParse(e.Data, out obj))
+            //檢查整體架構是否完備, 完備或除錯模式下才執行指令
+            if (Internals.SysReady || Internals.Debugging)
             {
-                //如果成功解析, 則運行物件, 獲取回傳碼
-                MUTAN.ReturnCode tmp = obj.Run();
+                //否則假設是 MUTAN 指令,嘗試解析, 如果失敗的話, 就無視掉本次輸出
 
-                //然後按回傳碼執行指令
-                if (tmp.Command != "")
+                //先創建一個可運行物件, 用來儲存解析結果
+                MUTAN.IRunnable obj;
+
+
+                //然後用單行解析器
+                if (MUTAN.LineParser.TryParse(e.Data, out obj))
                 {
-                    Internals.Execute(tmp.Command, tmp.Argument);
+                    //如果成功解析, 則運行物件, 獲取回傳碼
+                    MUTAN.ReturnCode tmp = obj.Run();
+
+                    //然後按回傳碼執行指令
+                    if (tmp.Command != "")
+                    {
+
+                        Internals.Execute(tmp.Command, tmp.Argument);
+
+                    }
                 }
             }
 
