@@ -92,6 +92,17 @@ namespace AZUSA
 
         }
 
+        //一切就緒, 進行提示, 載入啟動腳本
+        static public void READY()
+        {
+            MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
+            Variables.Write("$SYS_READY", "TRUE");
+            if (File.Exists(Environment.CurrentDirectory + @"\Scripts\INIT.mut"))
+            {
+                Execute("SCRIPT", "INIT");
+            }
+        }
+
         static void notifyIcon_DoubleClick(object sender, EventArgs e)
         {
             Clicked = true;

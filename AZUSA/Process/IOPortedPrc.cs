@@ -411,8 +411,7 @@ namespace AZUSA
                     //再次檢查完備性, 如果之前不完備, 現在完備了就進行提示
                     if (!tmp && ProcessManager.CheckCompleteness())
                     {
-                        Internals.MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
-                        Variables.Write("$SYS_READY", "TRUE");
+                        Internals.READY();
                     }
 
                     return;
