@@ -328,18 +328,23 @@ namespace AZUSA
             //activity log
             ActivityLog.Add("From " + Name + ": " + e.Data);
 
-
             //如果是詢問, 則調用 MUTAN 表達式解析器, 並返回結東
             //詢問的語法是 "(表達式)?"
             //First check if the engine is asking a question about value of an expression
             if (e.Data.EndsWith("?"))
             {
+                //首先保護進程以免受到 BROADCAST 干擾
+                NoBroadcast = true;
+
                 string result;
 
                 //去掉最後的問號, 就是表達式了
                 //如果格式有誤的話, 會返回 INVALIDEXPR (無效的表達式) 或 IMBALBRACKET (括號不平衡)
                 MUTAN.ExprParser.TryParse(e.Data.TrimEnd('?'), out result);
                 Engine.StandardInput.WriteLine(result);
+
+                //解除 BROADCAST 干擾保護
+                NoBroadcast = false;
 
                 //activity log
                 ActivityLog.Add("To " + Name + ": " + result);
@@ -374,13 +379,17 @@ namespace AZUSA
                     return;
                 //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
                 case "GetAzusaPid":
+
+                    //首先保護進程以免受到 BROADCAST 干擾
                     NoBroadcast = true;
 
                     Engine.StandardInput.WriteLine(Process.GetCurrentProcess().Id);
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + Process.GetCurrentProcess().Id);
 
+                    //解除 BROADCAST 干擾保護
                     NoBroadcast = false;
+                    
                     return;
                 //這是讓進程宣佈自己的身份的, 這指令應該是進程完成各種初始化之後才用的
                 case "RegisterAs":
@@ -424,21 +433,31 @@ namespace AZUSA
                     return;
                 //這是讓進程取得當前可用所有端口
                 case "GetAllPorts":
+
+                    //首先保護進程以免受到 BROADCAST 干擾
                     NoBroadcast = true;
+
                     string result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
                         result += port.Key + ",";
                     }
+
                     Engine.StandardInput.WriteLine(result.Trim(','));
+
+                    //解除 BROADCAST 干擾保護
+                    NoBroadcast = false;
 
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-                    NoBroadcast = false;
+                    
                     return;
                 //這是讓進程取得當前可用的AI 端口(AI引擎的接口)
                 case "GetAIPorts":
+
+                    //首先保護進程以免受到 BROADCAST 干擾
                     NoBroadcast = true;
+
                     result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -452,13 +471,19 @@ namespace AZUSA
 
                     Engine.StandardInput.WriteLine(result.Trim(','));
 
+                    //解除 BROADCAST 干擾保護
+                    NoBroadcast = false;
+
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-                    NoBroadcast = false;
+                    
                     return;
                 //這是讓進程取得當前可用的輸入端口(輸入引擎的接口)
                 case "GetInputPorts":
+
+                    //首先保護進程以免受到 BROADCAST 干擾
                     NoBroadcast = true;
+
                     result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -472,13 +497,19 @@ namespace AZUSA
 
                     Engine.StandardInput.WriteLine(result.Trim(','));
 
+                    //解除 BROADCAST 干擾保護
+                    NoBroadcast = false;
+
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-                    NoBroadcast = false;
+                    
                     return;
                 //這是讓進程取得當前可用的輸出端口(輸出引擎的接口)
                 case "GetOutputPorts":
+
+                    //首先保護進程以免受到 BROADCAST 干擾
                     NoBroadcast = true;
+                    
                     result = "";
                     foreach (KeyValuePair<string, PortType> port in ProcessManager.Ports)
                     {
@@ -492,9 +523,12 @@ namespace AZUSA
 
                     Engine.StandardInput.WriteLine(result.Trim(','));
 
+                    //解除 BROADCAST 干擾保護
+                    NoBroadcast = false;
+
                     //activity log
                     ActivityLog.Add("To " + Name + ": " + result.Trim(','));
-                    NoBroadcast = false;
+                    
                     return;
                 //這是讓進程可以宣佈自己責負甚麼函式, AZUSA 在接收到這種函件就會轉發給進程
                 //函式接管不是唯一的, 可以同時有多個進程接管同一個函式, AZUSA 會每個宣告了接管的進程都轉發一遍
@@ -506,11 +540,13 @@ namespace AZUSA
                     return;
                 //添加右鍵選單項目
                 case "AddMenuItem":
-                    Internals.ADDMENUITEM(arg);
+                    parsed = arg.Split(',');
+
+                    Internals.ADDMENUITEM(parsed[0].Trim(),arg.Replace(parsed[0]+",","").Trim());
                     return;
                 default:
                     break;
-            }
+            }            
 
             //檢查整體架構是否完備, 完備或除錯模式下才執行指令
             if (Internals.SysReady || Internals.Debugging)

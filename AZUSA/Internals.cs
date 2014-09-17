@@ -77,7 +77,6 @@ namespace AZUSA
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
             //MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
 
-
             //每一個執行檔都添加為引擎
             foreach (string exePath in EngList)
             {
@@ -86,13 +85,7 @@ namespace AZUSA
                 {
                     Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
                 }
-
-                Thread.Sleep(160);
             }
-
-            
-            
-
         }
 
         //一切就緒, 進行提示, 載入啟動腳本
@@ -210,11 +203,42 @@ namespace AZUSA
         }
 
         //增加右鍵選單的選項
-        static public void ADDMENUITEM(string name)
+        static public void ADDMENUITEM(string name,string command)
         {
             MenuItem itm = new MenuItem(Localization.GetMessage(name, name));
             itm.Name = name;
-            itm.Click += new EventHandler(itm_Click);
+
+            if (command.Trim() != "")
+            {
+                //執行 command
+                itm.Click += new EventHandler(delegate(object sender, EventArgs e)
+                    {
+                        //先創建一個可運行物件, 用來儲存解析結果
+                        MUTAN.IRunnable obj;
+
+
+                        //然後用單行解析器
+                        if (MUTAN.LineParser.TryParse(command, out obj))
+                        {
+                            //如果成功解析, 則運行物件, 獲取回傳碼
+                            MUTAN.ReturnCode tmp = obj.Run();
+
+                            //然後按回傳碼執行指令
+                            if (tmp.Command != "")
+                            {
+                                Internals.Execute(tmp.Command, tmp.Argument);
+                            }
+                        }
+                    });
+            }
+            else
+            {
+                //進行事件廣播
+                itm.Click += new EventHandler(delegate(object sender, EventArgs e)
+                {
+                    ProcessManager.Broadcast(name + "Clicked");
+                });
+            }
 
             if (notifyIcon.ContextMenu.MenuItems.Count == 5)
             {
@@ -225,11 +249,6 @@ namespace AZUSA
 
         }
 
-        static void itm_Click(object sender, EventArgs e)
-        {
-            MenuItem itm = (MenuItem)sender;
-            ProcessManager.Broadcast(itm.Text);
-        }
 
         //這是用來暫存反應的
         static string respCache = "";
