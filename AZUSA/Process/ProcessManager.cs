@@ -31,11 +31,10 @@ namespace AZUSA
         }
 
         //創建新進程, name 名字, enginePath 執行檔的路徑, arg 執行參數, 返回是否成功
-        static public bool AddProcess(string name, string enginePath, string arg = "", bool IsApplication=false)
+        static public bool AddProcess(string name, string enginePath, string arg = "", bool IsApplication=false, int CrashCount=0)
         {
             //利用參數, 創建一個新的 IOPortedPrc
-            IOPortedPrc prc = new IOPortedPrc(name, enginePath, arg);
-            prc.IsApplication = IsApplication;
+            IOPortedPrc prc = new IOPortedPrc(name, enginePath, arg,IsApplication,CrashCount);           
 
             //嘗試啟動進程
             //如果成功, 把進程添加進 CurrentProcesses, 返回 true

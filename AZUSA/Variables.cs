@@ -172,7 +172,7 @@ namespace AZUSA
                 }
 
                 //activity log
-                ActivityLog.Add("Value of " + name + " has been changed to " + val);
+                ActivityLog.Add(Localization.GetMessage("VALCHANGE","Value of " + name + " has been changed to ",name) + val);
 
             }
         }

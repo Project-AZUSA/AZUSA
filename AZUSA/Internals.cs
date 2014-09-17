@@ -77,21 +77,27 @@ namespace AZUSA
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
             //MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
 
+            Thread engStart;
             //每一個執行檔都添加為引擎
-            foreach (string exePath in EngList)
+            foreach (string exePath in EngList)            
             {
-                //如果不成功就發錯誤信息
-                if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
+                engStart = new Thread(new ThreadStart(delegate()
                 {
-                    Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
-                }
+                    //如果不成功就發錯誤信息
+                    if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
+                    {
+                        Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
+                    }
+                }));
+                engStart.Start();
+                engStart.Join();
             }
         }
 
         //一切就緒, 進行提示, 載入啟動腳本
         static public void READY()
         {
-            MESSAGE(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
+            ActivityLog.Add(Localization.GetMessage("ENGINECOMPLETE", "Engines are complete. AZUSA will now listen to all commands."));
             Variables.Write("$SYS_READY", "TRUE");
             SysReady = true;
             if (File.Exists(Environment.CurrentDirectory + @"\Scripts\INIT.mut"))

@@ -38,6 +38,9 @@ namespace AZUSA
         //不接收廣播
         public bool NoBroadcast = false;
 
+        //記錄意外退出回數
+        public int CrashCount = 0;
+
 
         //進程可以接管指令
         //RIDs 記錄的是進程接管的指令
@@ -46,13 +49,19 @@ namespace AZUSA
         public Dictionary<string, bool> RIDs = new Dictionary<string, bool>();
 
 
-        public IOPortedPrc(string name, string enginePath, string arg = "", bool isApp = false)
+        public IOPortedPrc(string name, string enginePath, string arg = "", bool isApp = false, int Count=0)
         {
             //名字
             Name = name;
 
             //路徑
             path = enginePath;
+
+            //意外退出回數
+            CrashCount = Count;
+
+            //是否應用
+            IsApplication = isApp;
 
 
             //這裡是創建進程實體的部分
@@ -280,23 +289,21 @@ namespace AZUSA
             //從 ProcessManager 的進程名單中除名
             ProcessManager.RemoveProcess(this);
 
-            //如果是主要引擎的話,詢問用戶是否重啟,5秒內沒回應就作罷
+            //如果是主要引擎的話,嘗試一定次數內重啟
             if (currentType != PortType.Unknown && !IsApplication)
             {
-                Internals.Clicked = false;
-
-                Internals.ERROR(Name + Localization.GetMessage("ENGINEEXIT", " has exited unexpectedly. Double-click the notify icon to restart the engine, or ignore this message otherwise."));
-
-                int starttime = DateTime.Now.Minute * 60 + DateTime.Now.Second;
-                while (DateTime.Now.Minute * 60 + DateTime.Now.Second - starttime < 5)
+                if (CrashCount <= 3)
                 {
-                    if (Internals.Clicked)
-                    {
-                        ProcessManager.AddProcess(Name, path);
-                        Internals.Clicked = false;
-                        break;
-                    }
+                    ProcessManager.AddProcess(Name, path, "", IsApplication, CrashCount + 1);
+
+                    ActivityLog.Add(Name + Localization.GetMessage("ENGINERESTART"," has exited unexpectedly. Attempting to restart."));
                 }
+                else
+                {
+                    Internals.ERROR(Name + Localization.GetMessage("ENGINEEXIT", " has exited unexpectedly. All restart attempts failed."));
+                }
+                       
+                   
             }
 
             //釋放變量佔用的資源
