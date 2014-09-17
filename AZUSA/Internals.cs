@@ -203,50 +203,79 @@ namespace AZUSA
         }
 
         //增加右鍵選單的選項
-        static public void ADDMENUITEM(string name,string command)
+        static public void ADDMENUITEM(string name, string script)
         {
-            MenuItem itm = new MenuItem(Localization.GetMessage(name, name));
-            itm.Name = name;
-
-            if (command.Trim() != "")
+            if (script == "")
             {
-                //執行 command
-                itm.Click += new EventHandler(delegate(object sender, EventArgs e)
-                    {
-                        //先創建一個可運行物件, 用來儲存解析結果
-                        MUTAN.IRunnable obj;
-
-
-                        //然後用單行解析器
-                        if (MUTAN.LineParser.TryParse(command, out obj))
-                        {
-                            //如果成功解析, 則運行物件, 獲取回傳碼
-                            MUTAN.ReturnCode tmp = obj.Run();
-
-                            //然後按回傳碼執行指令
-                            if (tmp.Command != "")
-                            {
-                                Internals.Execute(tmp.Command, tmp.Argument);
-                            }
-                        }
-                    });
+                return;
             }
-            else
-            {
-                //進行事件廣播
-                itm.Click += new EventHandler(delegate(object sender, EventArgs e)
-                {
-                    ProcessManager.Broadcast(name + "Clicked");
-                });
-            }
+            
 
+            //如果未有增加過選項, 首先增加分隔線
             if (notifyIcon.ContextMenu.MenuItems.Count == 5)
             {
                 notifyIcon.ContextMenu.MenuItems.Add(3, new MenuItem("-"));
             }
 
-            notifyIcon.ContextMenu.MenuItems.Add(3, itm);
+            // 處理子選單的語法 A>B
+            string[] parsed = name.Split('>');
 
+            //取得上級選單
+            Menu.MenuItemCollection parent = notifyIcon.ContextMenu.MenuItems;
+
+            //創建子選單
+            bool itemExist = false;
+            for (int i = 0; i < parsed.Length - 1; i++)
+            {
+                itemExist = false;
+                foreach (MenuItem item in parent)
+                {
+                    if (item.Text == parsed[i])
+                    {
+                        parent = item.MenuItems;
+                        itemExist = true;
+                        break;
+                    }
+                }
+                if (!itemExist)
+                {
+                    MenuItem item = new MenuItem(parsed[i]);
+                    if (i == 0)
+                    {
+                        parent.Add(3, item);
+                    }
+                    else
+                    {
+                        parent.Add(item);
+                    }
+                    parent = item.MenuItems;
+                }
+            }
+
+
+            MenuItem itm = new MenuItem(Localization.GetMessage(parsed[parsed.Length - 1], parsed[parsed.Length - 1]));
+            itm.Name = script.Replace('.','_');
+
+            itm.Click += new EventHandler(itm_Click);
+
+            
+            //如果不是子選單選項, 則加在分隔線下
+            if (parsed.Length == 1)
+            {
+                notifyIcon.ContextMenu.MenuItems.Add(3, itm);
+            }
+            else
+            {
+                parent.Add(itm);
+            }
+
+        }
+
+        static void itm_Click(object sender, EventArgs e)
+        {
+            MenuItem s = (MenuItem)sender;
+
+            Execute("SCRIPT",s.Name.Replace('_','.'));
         }
 
 
@@ -281,7 +310,7 @@ namespace AZUSA
                     new Thread(new ThreadStart(EXIT)).Start();
                     break;
                 // RESTART() 重啟程序
-                case "RESTART": 
+                case "RESTART":
                     //創建一個負責重啟的線程
                     new Thread(new ThreadStart(RESTART)).Start();
                     break;
@@ -291,7 +320,7 @@ namespace AZUSA
                     break;
                 // ACTVIEW() 打開活動檢視器
                 case "ACTVIEW":
-                    itmActivity_Click(null,EventArgs.Empty);
+                    itmActivity_Click(null, EventArgs.Empty);
                     break;
                 // PRCMON() 打開進程檢視器
                 case "PRCMON":
@@ -299,11 +328,11 @@ namespace AZUSA
                     break;
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
-                    string patharg = arg.Replace("{AZUSA}",Environment.CurrentDirectory);
+                    string patharg = arg.Replace("{AZUSA}", Environment.CurrentDirectory);
                     bool isapp;
                     if (arg.Contains(','))
                     {
-                        patharg = arg.Split(',')[0];                        
+                        patharg = arg.Split(',')[0];
                     }
                     if (!Boolean.TryParse(arg.Replace(patharg + ",", ""), out isapp))
                     {
@@ -332,7 +361,7 @@ namespace AZUSA
                             Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", path));
                         }
                     }
-                    
+
                     break;
                 // KILL(prcName) 終止進程
                 case "KILL":
@@ -404,7 +433,7 @@ namespace AZUSA
 
                     respCache = arg;
                     break;
-                // 作出反應
+                // MAKERESP(resp) 作出反應
                 case "MAKERESP":
                     //把 $WAITFORRESP 設成 FALSE
                     Variables.Write("$WAITFORRESP", "FALSE");
@@ -539,7 +568,11 @@ namespace AZUSA
                         MESSAGE(arg);
                     }
                     break;
-
+                // MENU(name, script) 添加右鍵選單項目
+                case "MENU":
+                    string[] parsed = arg.Split(',');
+                    Internals.ADDMENUITEM(parsed[0].Trim(), arg.Replace(parsed[0] + ",", "").Trim());
+                    break;
                 default:
                     //如果不是系統指令, 先檢查是否有引擎登記接管了這個指令
                     // routed 記錄指令是否已被接管
@@ -607,14 +640,14 @@ namespace AZUSA
                             //再找 bat (利用 bat 可以呼叫基本上任何直譯器調用任何腳本語言了)
                             if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat"))
                             {
-                                ActivityLog.Add("Calling \"" + "cmd.exe "+ "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg + "\"");
+                                ActivityLog.Add("Calling \"" + "cmd.exe " + "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg + "\"");
                                 ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
-                            //再找 vbs
+                                //再找 vbs
                             }
                             else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
                             {
                                 ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
-                            //都找不到就報錯
+                                //都找不到就報錯
                             }
                             else
                             {

@@ -537,13 +537,7 @@ namespace AZUSA
 
                     this.RIDs.Add(parsed[0], Convert.ToBoolean(parsed[1]));
 
-                    return;
-                //添加右鍵選單項目
-                case "AddMenuItem":
-                    parsed = arg.Split(',');
-
-                    Internals.ADDMENUITEM(parsed[0].Trim(),arg.Replace(parsed[0]+",","").Trim());
-                    return;
+                    return;                
                 default:
                     break;
             }            
