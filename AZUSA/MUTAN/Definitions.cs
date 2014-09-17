@@ -155,6 +155,13 @@ namespace AZUSA
             {
                 //以問題分隔開條件和語句
                 string[] split = line.Split('?');
+                string tmp;
+
+                //左手邊必須是合法條件式
+                if (!ExprParser.TryParse(split[0],out tmp))
+                {
+                    return false;
+                }
 
                 //右手邊的語句必須是一個合法的 multi (留 multi 也包含了所有次級的定義: decla, exec, basic)
                 //lastly the right hand side has to be a multi

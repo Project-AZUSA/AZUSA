@@ -98,7 +98,7 @@ namespace AZUSA
                                 InvalidOp.Add(i);
                             }
                         }
-                    }
+                    }                    
 
                     #endregion
 
@@ -575,7 +575,7 @@ namespace AZUSA
                     {
                         objects.Add(new loop(line.Trim()));
                     }
-                    else if(IsCond(line.Trim()))
+                    else if (IsCond(line.Trim()))
                     {
                         objects.Add(new cond(line.Trim()));
                     }

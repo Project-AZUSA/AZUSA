@@ -110,6 +110,7 @@ namespace AZUSA
         static void notifyIcon_DoubleClick(object sender, EventArgs e)
         {
             Clicked = true;
+            ProcessManager.Broadcast("IconClicked");
         }
 
         static void itmActivity_Click(object sender, EventArgs e)
@@ -303,7 +304,14 @@ namespace AZUSA
                     }
                     else
                     {
-                        System.Diagnostics.Process.Start(path, arg);
+                        try
+                        {
+                            System.Diagnostics.Process.Start(path, arg);
+                        }
+                        catch
+                        {
+                            Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", path));
+                        }
                     }
                     
                     break;
@@ -591,7 +599,7 @@ namespace AZUSA
                             }
                             else
                             {
-                                Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
+                                ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", cmd));
                             }
                         }
                     }
