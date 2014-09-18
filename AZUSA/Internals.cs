@@ -245,7 +245,7 @@ namespace AZUSA
                 }
                 if (!itemExist)
                 {
-                    MenuItem item = new MenuItem(parsed[i]);
+                    MenuItem item = new MenuItem(Localization.GetMessage(parsed[i],parsed[i]));
                     if (i == 0)
                     {
                         parent.Add(3, item);
