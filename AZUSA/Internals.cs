@@ -335,15 +335,7 @@ namespace AZUSA
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
                     string patharg = arg.Replace("{AZUSA}", Environment.CurrentDirectory);
-                    bool isapp;
-                    if (arg.Contains(','))
-                    {
-                        patharg = arg.Split(',')[0];
-                    }
-                    if (!Boolean.TryParse(arg.Replace(patharg + ",", ""), out isapp))
-                    {
-                        isapp = true;
-                    }
+                    
                     patharg = patharg.Trim();
                     string path = patharg;
                     string Arg = "";
@@ -354,7 +346,7 @@ namespace AZUSA
                     }
                     if (path.EndsWith(".exe"))
                     {
-                        ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg, isapp);
+                        ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg);
                     }
                     else
                     {

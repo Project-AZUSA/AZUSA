@@ -7,7 +7,7 @@ using System.Diagnostics;
 namespace AZUSA
 {
     //進程類型
-    enum PortType { Input, Output, AI , Unknown}
+    enum PortType { Input, Output, AI , Application ,Unknown}
 
     //進程管理員
     static class ProcessManager
@@ -31,10 +31,10 @@ namespace AZUSA
         }
 
         //創建新進程, name 名字, enginePath 執行檔的路徑, arg 執行參數, 返回是否成功
-        static public bool AddProcess(string name, string enginePath, string arg = "", bool IsApplication=false, int CrashCount=0)
+        static public bool AddProcess(string name, string enginePath, string arg = "", int CrashCount=0)
         {
             //利用參數, 創建一個新的 IOPortedPrc
-            IOPortedPrc prc = new IOPortedPrc(name, enginePath, arg,IsApplication,CrashCount);           
+            IOPortedPrc prc = new IOPortedPrc(name, enginePath, arg,CrashCount);           
 
             //嘗試啟動進程
             //如果成功, 把進程添加進 CurrentProcesses, 返回 true
@@ -71,7 +71,7 @@ namespace AZUSA
 
             foreach (IOPortedPrc prc in ListCopy)
             {
-                if (!prc.IsApplication)
+                if (prc.currentType!=PortType.Application)
                 {
                     prc.End();
                 }

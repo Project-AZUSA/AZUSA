@@ -26,9 +26,6 @@ namespace AZUSA
         //進程的實體
         Process Engine;
 
-        //進程是否應用程序
-        public bool IsApplication = false;
-
         //進程目前的類型
         public PortType currentType = PortType.Unknown;
 
@@ -49,7 +46,7 @@ namespace AZUSA
         public Dictionary<string, bool> RIDs = new Dictionary<string, bool>();
 
 
-        public IOPortedPrc(string name, string enginePath, string arg = "", bool isApp = false, int Count=0)
+        public IOPortedPrc(string name, string enginePath, string arg = "", int Count=0)
         {
             //名字
             Name = name;
@@ -59,10 +56,7 @@ namespace AZUSA
 
             //意外退出回數
             CrashCount = Count;
-
-            //是否應用
-            IsApplication = isApp;
-
+            
 
             //這裡是創建進程實體的部分
             //specifies the way the recognizer is run
@@ -290,11 +284,11 @@ namespace AZUSA
             ProcessManager.RemoveProcess(this);
 
             //如果是主要引擎的話,嘗試一定次數內重啟
-            if (currentType != PortType.Unknown && !IsApplication)
+            if (currentType != PortType.Unknown && currentType!=PortType.Application)
             {
                 if (CrashCount <= 3)
                 {
-                    ProcessManager.AddProcess(Name, path, "", IsApplication, CrashCount + 1);
+                    ProcessManager.AddProcess(Name, path, "", CrashCount + 1);
 
                     ActivityLog.Add(Name + Localization.GetMessage("ENGINERESTART"," has exited unexpectedly. Attempting to restart."));
                 }
@@ -419,7 +413,7 @@ namespace AZUSA
                             ProcessManager.OutputPid.Add(pid);
                             break;
                         case "Application":
-                            this.IsApplication = true;
+                            currentType = PortType.Application;
                             break;
                         default:
                             break;
