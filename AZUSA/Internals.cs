@@ -236,7 +236,7 @@ namespace AZUSA
                 itemExist = false;
                 foreach (MenuItem item in parent)
                 {
-                    if (item.Text == parsed[i])
+                    if (item.Text == Localization.GetMessage(parsed[i], parsed[i]))
                     {
                         parent = item.MenuItems;
                         itemExist = true;
