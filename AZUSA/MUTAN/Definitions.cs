@@ -131,7 +131,7 @@ namespace AZUSA
 
         //判斷是否一個 multi (一行多句指令)
         static public bool IsMulti(string line)
-        {
+        {   
             //一行多句指令以 ; 作為分隔標號
             //split each part with ';', each part should be a basic (decla or exec)
             foreach (string part in line.Split(';'))

@@ -190,10 +190,15 @@ namespace AZUSA
         //讀取變量
         static public string Read(string name)
         {
-            //因為字串內出現引號會導致解析錯誤, 所以定義了特殊變量
+            //字串內出現引號會導致解析錯誤, 定義特殊變量
             if (name == "{\"}" || name=="{QUOT}")
             {
                 return "\"";
+            }
+            //字串內出現分號會導致解析錯誤, 定義特殊變量
+            else if (name == "{.,}")
+            {
+                return ";";
             }
             //簡單的 HTTP GET 回傳
             else if (name.StartsWith("{http"))

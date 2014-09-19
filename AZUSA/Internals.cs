@@ -65,7 +65,7 @@ namespace AZUSA
             string[] EngList = new string[] { };
             if (Directory.Exists(EngPath))
             {
-                EngList = System.IO.Directory.GetFiles(EngPath, "*.exe", SearchOption.AllDirectories);
+                EngList = System.IO.Directory.GetFiles(EngPath, "*.exe", SearchOption.TopDirectoryOnly);
             }
             else
             {
@@ -76,21 +76,15 @@ namespace AZUSA
 
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
             //MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
-
-            Thread engStart;
+            
             //每一個執行檔都添加為引擎
             foreach (string exePath in EngList)            
-            {
-                engStart = new Thread(new ThreadStart(delegate()
+            {        
+                //如果不成功就發錯誤信息
+                if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
                 {
-                    //如果不成功就發錯誤信息
-                    if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
-                    {
-                        Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
-                    }
-                }));
-                engStart.Start();
-                engStart.Join();
+                    Internals.ERROR(Localization.GetMessage("ENGSTARTFAIL", "Unable to run {arg}. Please make sure it is in the correct folder.", exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim()));
+                }
             }
         }
 

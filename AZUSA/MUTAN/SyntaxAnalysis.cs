@@ -362,7 +362,6 @@ namespace AZUSA
                         }
                     }
 
-
                     #endregion
 
                     //最後就是檢查邏輯"非"運算
