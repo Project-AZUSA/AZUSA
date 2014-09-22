@@ -567,6 +567,10 @@ namespace AZUSA
                     }
                 }
             }
+            else
+            {
+                Internals.ERROR(Localization.GetMessage("ENGINEMISSING", "Some engines are missing. AZUSA will not execute any MUTAN commands unless AI and I/O are all registered."));
+            }
 
         }
 
