@@ -109,7 +109,7 @@ namespace AZUSA
             {
                 if (!prc.NoBroadcast)
                 {
-                    prc.Input.WriteLine(msg);
+                    prc.WriteLine(msg);
                 }
 
                 //activity log

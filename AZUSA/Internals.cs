@@ -103,7 +103,7 @@ namespace AZUSA
         static void notifyIcon_DoubleClick(object sender, EventArgs e)
         {
             Clicked = true;
-            ProcessManager.Broadcast("IconClicked");
+            ProcessManager.Broadcast("EVENT(IconClicked)");
         }
 
         static void itmActivity_Click(object sender, EventArgs e)
@@ -420,8 +420,8 @@ namespace AZUSA
                 case "WAITFORRESP":
                     //把 $WAITFORRESP 設成 TRUE
                     Variables.Write("$WAITFORRESP", "TRUE");
-                    //通知引擎 (主要是針對 AI) 現在正等待回應
-                    ProcessManager.Broadcast("WaitingForResp");
+                    ////通知引擎 (主要是針對 AI) 現在正等待回應
+                    //ProcessManager.Broadcast("WaitingForResp");
 
                     respCache = arg;
                     break;
@@ -436,8 +436,8 @@ namespace AZUSA
                         break;
                     }
 
-                    //通知引擎已作出反應
-                    ProcessManager.Broadcast("RESPONDED");
+                    ////通知引擎已作出反應
+                    //ProcessManager.Broadcast("RESPONDED");
 
                     //解析暫存
                     MUTAN.Parser.TryParse(respCache.Split('\n'), out obj);
@@ -486,17 +486,11 @@ namespace AZUSA
                                 //RIDs 的值如果是 true 的話就表示只傳參數
                                 if (prc.RIDs[cmd])
                                 {
-                                    prc.Input.WriteLine(arg);
-
-                                    //activity log
-                                    ActivityLog.Add("To " + prc.Name + ": " + arg);
+                                    prc.WriteLine(arg);
                                 }
                                 else
                                 {
-                                    prc.Input.WriteLine(cmd + "(" + arg + ")");
-
-                                    //activity log
-                                    ActivityLog.Add("To " + prc.Name + ": " + cmd + "(" + arg + ")");
+                                    prc.WriteLine(cmd + "(" + arg + ")");
                                 }
                             }
                         }
@@ -534,17 +528,11 @@ namespace AZUSA
                                 //RIDs 的值如果是 true 的話就表示只傳參數
                                 if (prc.RIDs[cmd])
                                 {
-                                    prc.Input.WriteLine(arg);
-
-                                    //activity log
-                                    ActivityLog.Add("To " + prc.Name + ": " + arg);
+                                    prc.WriteLine(arg);
                                 }
                                 else
                                 {
-                                    prc.Input.WriteLine(cmd + "(" + arg + ")");
-
-                                    //activity log
-                                    ActivityLog.Add("To " + prc.Name + ": " + cmd + "(" + arg + ")");
+                                    prc.WriteLine(cmd + "(" + arg + ")");
                                 }
                             }
                         }
@@ -587,17 +575,11 @@ namespace AZUSA
                                 //RIDs 的值如果是 true 的話就表示只傳參數
                                 if (prc.RIDs[cmd])
                                 {
-                                    prc.Input.WriteLine(arg);
-
-                                    //activity log
-                                    ActivityLog.Add("To " + prc.Name + ": " + arg);
+                                    prc.WriteLine(arg);                                    
                                 }
                                 else
                                 {
-                                    prc.Input.WriteLine(cmd + "(" + arg + ")");
-
-                                    //activity log
-                                    ActivityLog.Add("To " + prc.Name + ": " + cmd + "(" + arg + ")");
+                                    prc.WriteLine(cmd + "(" + arg + ")");
                                 }
                             }
                         }

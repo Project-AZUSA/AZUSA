@@ -15,7 +15,8 @@ namespace AZUSA
         static public class ExprParser
         {
             //嘗試解析, 成功回傳 true, 結果輸出到 result
-            //失敗回傳 false, 錯誤信息輸出到 result (INVALIDEXPR (無效的表達式) 或 IMBALBRACKET (括號不平衡))
+            //除錯模式下進行嚴格解析，失敗回傳 false, 錯誤信息輸出到 result (EMPTY (空的表達式) INVALIDEXPR (無效的表達式) IMBALBRACKET (括號不平衡))
+            //否則一概視為字串
             //Try to evaluate the expression, will output error message if failed
             static public bool TryParse(string _expr, out string result)
             {
@@ -29,6 +30,7 @@ namespace AZUSA
                 {
                     result = "INVALIDEXPR";
                     return false;
+
                 }
 
                 //宣告用來暫存運算值的變量
@@ -98,7 +100,7 @@ namespace AZUSA
                                 InvalidOp.Add(i);
                             }
                         }
-                    }                    
+                    }
 
                     #endregion
 
@@ -167,7 +169,7 @@ namespace AZUSA
                         //整個表達式處理完畢後, 就檢查括號是否平衡
                         if (bracketCount == 0)  //brackets are balanced
                         {
-                            //如果是的話, 就把最後記錄到的括號的內容進行運數, 再用其值替換掉本來的表達式, 然後再進行運算
+                            //如果是的話, 就把最後記錄到的括號的內容進行運算, 再用其值替換掉本來的表達式, 然後再進行運算
                             if (TryParse(content, out imd))
                             {
                                 return TryParse(expr.Replace("(" + content + ")", imd), out result);
@@ -177,6 +179,7 @@ namespace AZUSA
                         {
                             result = "IMBALBRACKET";
                             return false;
+
                         }
                     }
                     #endregion
@@ -289,13 +292,13 @@ namespace AZUSA
                     {
                         //先分割成左右兩部分
                         string LHS = expr.Split(',')[0];
-                        string RHS = expr.Replace(LHS + ",", "").Trim();                        
+                        string RHS = expr.Replace(LHS + ",", "").Trim();
                         LHS = LHS.Trim();
 
                         if (TryParse(LHS, out imd) && TryParse(RHS, out imd2))
                         {
 
-                            result = expr.Replace(LHS,imd).Replace(RHS,imd2);
+                            result = expr.Replace(LHS, imd).Replace(RHS, imd2);
                             return true;
                         }
                     }
@@ -357,7 +360,15 @@ namespace AZUSA
                     {
                         if (TryParse(expr.Split('/')[0], out imd) && TryParse(expr.Replace(expr.Split('/')[0] + "/", ""), out imd2))
                         {
-                            result = Convert.ToString(Math.Round((double)Convert.ToInt32(imd) / Convert.ToInt32(imd2), 0));
+                            if (Convert.ToInt32(imd2) != 0)
+                            {
+                                result = Convert.ToString(Math.Round((double)Convert.ToInt32(imd) / Convert.ToInt32(imd2), 0));
+                            }
+                            else
+                            {
+                                result = "DivBy0";
+                            }
+
                             return true;
                         }
                     }
@@ -398,9 +409,7 @@ namespace AZUSA
                     //如果失敗的話就返回無效的表達式錯誤
                     result = "INVALIDEXPR";
                     return false;
-
                 }
-
             }
         }
 
@@ -418,7 +427,7 @@ namespace AZUSA
                 //如果是空行就回傳一個空物件
                 if (line.Trim() == "")
                 {
-                    obj = new empty();                    
+                    obj = new empty();
                     return true;
                 }
 

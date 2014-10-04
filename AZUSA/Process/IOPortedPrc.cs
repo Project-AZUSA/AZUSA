@@ -106,13 +106,19 @@ namespace AZUSA
             }
         }
 
-        //返回進程的輸入端
-        public StreamWriter Input
-        {
-            get
-            {
-                return Engine.StandardInput;
-            }
+        //輸出信息
+        public void WriteLine(string msg)
+        {            
+            // UrlEncode 是要防止因編碼頁限制而出現亂碼
+            // 把 %5c 取代回成 '\' 是方便路徑的傳遞, 讓 ASCII 路徑可以不必 Decode
+            // 把 %2c 取代回成 ',' 是方便引擎傳參分隔號不必 Decode  
+            string encoded = System.Web.HttpUtility.UrlEncode(msg).Replace("%5c", "\\").Replace("%2c", ",");
+            Engine.StandardInput.WriteLine(encoded);    
+
+            //activity log
+            ActivityLog.Add("To "+Name+":"+encoded);
+      
+
         }
 
         //啟動進程
@@ -252,7 +258,7 @@ namespace AZUSA
 
                 foreach (IOPortedPrc prc in ListCopy)
                 {
-                    prc.Input.WriteLine("PortHasChanged");
+                    prc.WriteLine("PortHasChanged");
                 }
 
                 ListCopy = null;
@@ -319,20 +325,22 @@ namespace AZUSA
         //處理引擎的輸出
         void Engine_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            string Data = System.Web.HttpUtility.UrlDecode(e.Data);
+
             //如果是空白輸出, 不要理會
             //Ignore NULL and empty inputs that will crash the program
-            if (e.Data == null || e.Data.Trim() == "")
+            if (Data == null || Data.Trim() == "")
             {
                 return;
             }
 
             //activity log
-            ActivityLog.Add("From " + Name + ": " + e.Data);
+            ActivityLog.Add("From " + Name + ": " + Data);
 
             //如果是詢問, 則調用 MUTAN 表達式解析器, 並返回結東
             //詢問的語法是 "(表達式)?"
             //First check if the engine is asking a question about value of an expression
-            if (e.Data.EndsWith("?"))
+            if (Data.EndsWith("?"))
             {
                 //首先保護進程以免受到 BROADCAST 干擾
                 NoBroadcast = true;
@@ -341,7 +349,7 @@ namespace AZUSA
 
                 //去掉最後的問號, 就是表達式了
                 //如果格式有誤的話, 會返回 INVALIDEXPR (無效的表達式) 或 IMBALBRACKET (括號不平衡)
-                MUTAN.ExprParser.TryParse(e.Data.TrimEnd('?'), out result);
+                MUTAN.ExprParser.TryParse(Data.TrimEnd('?'), out result);
                 Engine.StandardInput.WriteLine(result);
 
                 //解除 BROADCAST 干擾保護
@@ -358,10 +366,10 @@ namespace AZUSA
 
             //首先假設是溝通用的指令, 主要是用來讓進程宣佈自己的角色和功能, 並取得可用接口等等的溝通協調用的指令  
             //對字串分割並去掉多餘空白
-            if (MUTAN.IsExec(e.Data))
+            if (MUTAN.IsExec(Data))
             {
-                RID = e.Data.Split('(')[0];
-                arg = e.Data.Substring(RID.Length + 1, e.Data.Length - RID.Length - 2);
+                RID = Data.Split('(')[0];
+                arg = Data.Substring(RID.Length + 1, Data.Length - RID.Length - 2);
                 RID = RID.Trim();
             }
 
@@ -553,7 +561,7 @@ namespace AZUSA
 
 
                 //然後用單行解析器
-                if (MUTAN.LineParser.TryParse(e.Data, out obj))
+                if (MUTAN.LineParser.TryParse(Data, out obj))
                 {
                     //如果成功解析, 則運行物件, 獲取回傳碼
                     MUTAN.ReturnCode tmp = obj.Run();

@@ -13,7 +13,7 @@ namespace AZUSA
 
         //MUTAN 語法的形式定義
 
-        //expr  :=  *          (任何不為空的表達式, 例如 1+1, (1>2)&(VAR=3), ~(true&true|false) 實施時利用表達式解析器判斷是否合法)
+        //expr  :=  *          (任何不為空的表達式, 例如 1+1, (1>2)&(VAR=3), !(true&true|false) 實施時利用表達式解析器判斷是否合法)
         //decla :=  [$]ID=expr (變量宣告, 變量名如以 $ 開頭表示是臨時變量, AZUSA 在退出時不會保存)
         //exec  :=  RID(expr|"")   (函式調用, RID 是函式名, 參數可以是表達式或空白字串)
         //term  :=  "END"|"BREAK" (中斷執行用)
