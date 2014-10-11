@@ -76,10 +76,10 @@ namespace AZUSA
 
             //提示本體啟動成功, 待各引擎啟動完畢後會再有提示的
             //MESSAGE(Localization.GetMessage("AZUSAREADY", "AZUSA is ready. Waiting for engines to initialize..."));
-            
+
             //每一個執行檔都添加為引擎
-            foreach (string exePath in EngList)            
-            {        
+            foreach (string exePath in EngList)
+            {
                 //如果不成功就發錯誤信息
                 if (!ProcessManager.AddProcess(exePath.Replace(EngPath + @"\", "").Replace(".exe", "").Trim(), exePath))
                 {
@@ -209,7 +209,7 @@ namespace AZUSA
             {
                 return;
             }
-            
+
 
             //如果未有增加過選項, 首先增加分隔線
             if (notifyIcon.ContextMenu.MenuItems.Count == 5)
@@ -239,7 +239,7 @@ namespace AZUSA
                 }
                 if (!itemExist)
                 {
-                    MenuItem item = new MenuItem(Localization.GetMessage(parsed[i],parsed[i]));
+                    MenuItem item = new MenuItem(Localization.GetMessage(parsed[i], parsed[i]));
                     if (i == 0)
                     {
                         parent.Add(3, item);
@@ -254,11 +254,11 @@ namespace AZUSA
 
 
             MenuItem itm = new MenuItem(Localization.GetMessage(parsed[parsed.Length - 1], parsed[parsed.Length - 1]));
-            itm.Name = script.Replace('.','_');
+            itm.Name = script.Replace('.', '_');
 
             itm.Click += new EventHandler(itm_Click);
 
-            
+
             //如果不是子選單選項, 則加在分隔線下
             if (parsed.Length == 1)
             {
@@ -275,7 +275,7 @@ namespace AZUSA
         {
             MenuItem s = (MenuItem)sender;
 
-            Execute("SCRIPT",s.Name.Replace('_','.'));
+            Execute("SCRIPT", s.Name.Replace('_', '.'));
         }
 
 
@@ -329,7 +329,7 @@ namespace AZUSA
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
                     string patharg = arg.Replace("{AZUSA}", Environment.CurrentDirectory);
-                    
+
                     patharg = patharg.Trim();
                     string path = patharg;
                     string Arg = "";
@@ -370,16 +370,22 @@ namespace AZUSA
                     //用來暫存腳本內容的陣列
                     string[] program;
 
-                    //首先嘗試讀入腳本內容
-                    try
+                    //首先嘗試讀入腳本內容                   
+                    var scriptpath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Scripts\" + scr[0];
+                    if (File.Exists(scriptpath + ".mut"))
                     {
-                        program = File.ReadAllLines(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\Scripts\" + scr[0] + ".mut");
+                        program = File.ReadAllLines(scriptpath + ".mut");
                     }
-                    catch
+                    else if (File.Exists(scriptpath + ".msf"))
+                    {
+                        program = File.ReadAllLines(scriptpath + ".msf");
+                    }
+                    else
                     {
                         Internals.ERROR(Localization.GetMessage("SCRMISSING", "Unable to find the script named {arg}. Please make sure it is in the correct folder.", scr[0]));
                         return;
                     }
+
 
                     //如果有分塊的話, 就先進行提取
                     if (scr.Length > 1)
@@ -421,7 +427,7 @@ namespace AZUSA
                     //把 $WAITFORRESP 設成 TRUE
                     Variables.Write("$WAITFORRESP", "TRUE");
                     ////通知引擎 (主要是針對 AI) 現在正等待回應
-                    //ProcessManager.Broadcast("WaitingForResp");
+                    ProcessManager.Broadcast("EVENT(WaitingForResp)");
 
                     respCache = arg;
                     break;
@@ -575,7 +581,7 @@ namespace AZUSA
                                 //RIDs 的值如果是 true 的話就表示只傳參數
                                 if (prc.RIDs[cmd])
                                 {
-                                    prc.WriteLine(arg);                                    
+                                    prc.WriteLine(arg);
                                 }
                                 else
                                 {
@@ -602,6 +608,9 @@ namespace AZUSA
                                 case "bat":
                                     ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + "\" " + arg);
                                     return;
+                                case "cmd":
+                                    ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + "\" " + arg);
+                                    return;
                                 case "vbs":
                                     ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + "\" " + arg);
                                     return;
@@ -616,12 +625,18 @@ namespace AZUSA
                             {
                                 ActivityLog.Add("Calling \"" + "cmd.exe " + "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg + "\"");
                                 ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
-                                //再找 vbs
+                            }
+                            //再找 cmd
+                            else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".cmd"))
+                            {
+                                ActivityLog.Add("Calling \"" + "cmd.exe " + "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".cmd\" " + arg + "\"");
+                                ProcessManager.AddProcess(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".cmd\" " + arg);
+                            //再找 vbs
                             }
                             else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
                             {
                                 ProcessManager.AddProcess(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
-                                //都找不到就報錯
+                            //都找不到就報錯
                             }
                             else
                             {

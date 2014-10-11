@@ -111,9 +111,6 @@ namespace AZUSA
                 {
                     prc.WriteLine(msg);
                 }
-
-                //activity log
-                ActivityLog.Add("To " + prc.Name + ": "+msg);
             }
 
             ListCopy = null;

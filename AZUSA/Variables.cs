@@ -242,7 +242,15 @@ namespace AZUSA
             //日期時間
             else if (name.StartsWith("{") && name.EndsWith("}"))
             {
-                return DateTime.Now.ToString(name.TrimStart('{').TrimEnd('}'));
+                string datetime=DateTime.Now.ToString(name.TrimStart('{').TrimEnd('}'));
+                if (datetime != name.TrimStart('{').TrimEnd('}'))
+                {
+                    return datetime;
+                }
+                else
+                {
+                    return name;
+                }
 
             }
             //否則就返回變量環境裡的值
