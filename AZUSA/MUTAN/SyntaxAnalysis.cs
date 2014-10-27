@@ -184,6 +184,22 @@ namespace AZUSA
                     }
                     #endregion
 
+                    //逗號分割
+                    if (expr.Contains(",") && !InvalidOp.Contains(expr.IndexOf(",")))
+                    {
+                        //先分割成左右兩部分
+                        string LHS = expr.Split(',')[0];
+                        string RHS = expr.Replace(LHS + ",", "").Trim();
+                        LHS = LHS.Trim();
+
+                        if (TryParse(LHS, out imd) && TryParse(RHS, out imd2))
+                        {
+
+                            result = expr.Replace(LHS, imd).Replace(RHS, imd2);
+                            return true;
+                        }
+                    }
+
                     //如果所有括號都處理掉了,就進行邏輯運算
                     #region Logical operators spliting and (include "|" operator for strings)
 
@@ -284,24 +300,8 @@ namespace AZUSA
                     }
                     #endregion
 
-                    //邏輯運算之後就是加減乘除的運算, 和特殊的逗號運算符
-                    #region String concatenation and arithmetic operators spliting
-
-
-                    if (expr.Contains(",") && !InvalidOp.Contains(expr.IndexOf(",")))
-                    {
-                        //先分割成左右兩部分
-                        string LHS = expr.Split(',')[0];
-                        string RHS = expr.Replace(LHS + ",", "").Trim();
-                        LHS = LHS.Trim();
-
-                        if (TryParse(LHS, out imd) && TryParse(RHS, out imd2))
-                        {
-
-                            result = expr.Replace(LHS, imd).Replace(RHS, imd2);
-                            return true;
-                        }
-                    }
+                    //邏輯運算之後就是加減乘除的運算
+                    #region String concatenation and arithmetic operators spliting                    
 
                     if (expr.Contains("+") && !InvalidOp.Contains(expr.IndexOf("+")))
                     {

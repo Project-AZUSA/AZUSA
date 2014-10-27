@@ -329,6 +329,13 @@ namespace AZUSA
                 // EXEC(filepath,IsApp) 創建進程
                 case "EXEC":
                     string patharg = arg.Replace("{AZUSA}", Environment.CurrentDirectory);
+                                                           
+                    // Get the second arg (true/false) indicating whether process should be executed through AZUSA
+                    bool thruAZUSA = true;
+                    if (patharg.Contains(','))
+                    {
+                        Boolean.TryParse(patharg.Split(',').Last(), out thruAZUSA);
+                    }
 
                     patharg = patharg.Trim();
                     string path = patharg;
@@ -338,7 +345,7 @@ namespace AZUSA
                         path = patharg.Split('$')[0];
                         Arg = patharg.Replace(path + "$", "");
                     }
-                    if (path.EndsWith(".exe"))
+                    if (path.EndsWith(".exe") && thruAZUSA)
                     {
                         ProcessManager.AddProcess(Path.GetFileNameWithoutExtension(path), path, Arg);
                     }
@@ -346,7 +353,11 @@ namespace AZUSA
                     {
                         try
                         {
-                            System.Diagnostics.Process.Start(path, arg);
+                            System.Diagnostics.Process target= new System.Diagnostics.Process();
+                            target.StartInfo.FileName=path;
+                            target.StartInfo.Arguments=arg;
+                            target.StartInfo.WorkingDirectory=System.IO.Path.GetDirectoryName(path);
+                            target.Start();
                         }
                         catch
                         {
@@ -359,13 +370,26 @@ namespace AZUSA
                 case "KILL":
                     ProcessManager.Kill(arg);
                     break;
-                // SCRIPT({SID(.part)}) 執行腳本檔
+                // SCRIPT({SID(.part)},arg1=val1,arg2=val2,...) 執行腳本檔
                 case "SCRIPT":
                     //創建執行物件
                     MUTAN.IRunnable obj;
 
+                    //解析參數
+                    string[] parsed= Utils.SplitWithProtection(arg).ToArray();                    
+
                     //分割參數, 以便取得部分名, 例如 TEST.part1
-                    string[] scr = arg.Split('.');
+                    string[] scr = parsed[0].Split('.');
+
+                    List<string> var = new List<string>();
+                    List<string> val = new List<string>();
+
+                    //處理傳入值
+                    for (int i = 1; i < parsed.Count(); i++)
+                    {
+                        var.Add(Utils.LSplit(parsed[i], "="));
+                        val.Add(Utils.RSplit(parsed[i], "="));
+                    }
 
                     //用來暫存腳本內容的陣列
                     string[] program;
@@ -395,6 +419,16 @@ namespace AZUSA
                             program = MUTAN.GetPart(program, scr[i]);
                         }
                     }
+
+                    //取代傳入值
+                    for (int ln=0;ln<program.Count();ln++)
+                    {
+                        for (int i = 0; i < var.Count(); i++)
+                        {
+                            program[ln] = program[ln].Replace("{"+var[i]+"}", val[i]);
+                        }
+                    }
+
 
                     //然後進行解析
                     MUTAN.Parser.TryParse(program, out obj);
@@ -556,7 +590,7 @@ namespace AZUSA
                     break;
                 // MENU(name, script) 添加右鍵選單項目
                 case "MENU":
-                    string[] parsed = arg.Split(',');
+                    parsed = arg.Split(',');
                     Internals.ADDMENUITEM(parsed[0].Trim(), arg.Replace(parsed[0] + ",", "").Trim());
                     break;
                 default:

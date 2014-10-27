@@ -172,7 +172,7 @@ namespace AZUSA
                 }
 
                 //activity log
-                ActivityLog.Add(Localization.GetMessage("VALCHANGE","Value of " + name + " has been changed to ",name) + val);
+                ActivityLog.Add(Localization.GetMessage("VALCHANGE", "Value of " + name + " has been changed to ", name) + val);
 
             }
         }
@@ -191,7 +191,7 @@ namespace AZUSA
         static public string Read(string name)
         {
             //字串內出現引號會導致解析錯誤, 定義特殊變量
-            if (name == "{\"}" || name=="{QUOT}")
+            if (name == "{\"}" || name == "{QUOT}")
             {
                 return "\"";
             }
@@ -199,6 +199,11 @@ namespace AZUSA
             else if (name == "{.,}")
             {
                 return ";";
+            }
+            // AZUSA 執行目錄
+            else if (name == "{AZUSA}")
+            {
+                return Directory.GetCurrentDirectory();
             }
             //簡單的 HTTP GET 回傳
             else if (name.StartsWith("{http"))
@@ -211,38 +216,77 @@ namespace AZUSA
                     return sw.ReadToEnd();
                 }
 
-            }           
+            }
             //函式回傳
             else if (name.StartsWith("{") && name.EndsWith("}") && name.Contains("("))
             {
-                name=name.Trim('{','}');
+                name = name.Trim('{', '}');
                 string cmd = name.Split('(')[0];
                 string arg = name.Remove(name.Length - 1).Replace(cmd + "(", "");
 
+                //檢查是否有引擎登記接管了這個指令
+                // routed 記錄指令是否已被接管
+                bool routed = false;
 
-                if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe"))
+                List<IOPortedPrc> ListCopy = new List<IOPortedPrc>(ProcessManager.GetCurrentProcesses());
+
+                //檢查每一個現在運行中的進程
+                foreach (IOPortedPrc prc in ListCopy)
                 {
-                    IOPortedPrc prc = new IOPortedPrc(name, Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe", arg);
-                    return prc.StartAndGetOutput();
+                    try
+                    {
+                        //如果進程有接管這個指令, 就把指令內容傳過去
+                        if (prc.RIDs.ContainsKey(cmd))
+                        {
+                            //設 routed 為 true
+                            routed = true;
+
+                            //根據 RIDs 的值,決定只傳參數還是指令跟參數整個傳過去
+                            //RIDs 的值如果是 true 的話就表示只傳參數
+                            if (prc.RIDs[cmd])
+                            {
+                                prc.WriteLine(arg);
+                            }
+                            else
+                            {
+                                prc.WriteLine(cmd + "(" + arg + ")");
+                            }
+
+                            return prc.GetReturn();
+                        }
+                    }
+                    catch { }
                 }
-                else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat"))
+
+                //扔掉 ListCopy
+                ListCopy = null;
+
+                if (!routed)
                 {
-                    IOPortedPrc prc = new IOPortedPrc(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
-                    return prc.StartAndGetOutput();
-                   
+                    if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe"))
+                    {
+                        IOPortedPrc prc = new IOPortedPrc(name, Environment.CurrentDirectory + @"\Routines\" + cmd + ".exe", arg);
+                        return prc.StartAndGetOutput();
+                    }
+                    else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat"))
+                    {
+                        IOPortedPrc prc = new IOPortedPrc(cmd, "cmd.exe", "/C \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".bat\" " + arg);
+                        return prc.StartAndGetOutput();
+
+                    }
+                    else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
+                    {
+                        IOPortedPrc prc = new IOPortedPrc(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
+                        return prc.StartAndGetOutput();
+                    }
                 }
-                else if (File.Exists(Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs"))
-                {
-                    IOPortedPrc prc = new IOPortedPrc(cmd, "cscript.exe", " \"" + Environment.CurrentDirectory + @"\Routines\" + cmd + ".vbs\" " + arg);
-                    return prc.StartAndGetOutput();                    
-                }                
 
                 return name;
             }
             //日期時間
             else if (name.StartsWith("{") && name.EndsWith("}"))
             {
-                string datetime=DateTime.Now.ToString(name.TrimStart('{').TrimEnd('}'));
+                string datetime = DateTime.Now.ToString(name.TrimStart('{').TrimEnd('}'));
                 if (datetime != name.TrimStart('{').TrimEnd('}'))
                 {
                     return datetime;

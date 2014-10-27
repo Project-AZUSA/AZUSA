@@ -112,7 +112,7 @@ namespace AZUSA
             // UrlEncode 是要防止因編碼頁限制而出現亂碼
             // 把 %5c 取代回成 '\' 是方便路徑的傳遞, 讓 ASCII 路徑可以不必 Decode
             // 把 %2c 取代回成 ',' 是方便引擎傳參分隔號不必 Decode  
-            string encoded = System.Web.HttpUtility.UrlEncode(msg).Replace("%5c", "\\").Replace("%2c", ",");
+            string encoded = Utils.UriEncode(msg);
             Engine.StandardInput.WriteLine(encoded);    
 
             //activity log
@@ -138,7 +138,9 @@ namespace AZUSA
 
         }
 
+        //回傳
         string output = "";
+        bool RESPONDED = false;
 
         //啟動進程並取得回傳
         public string StartAndGetOutput()
@@ -160,6 +162,16 @@ namespace AZUSA
 
             return output;
 
+        }
+
+        //取得回傳
+        public string GetReturn()
+        {
+            while (!RESPONDED) { }
+            string tmp = output;
+            output = "";
+            RESPONDED = false;
+            return tmp;
         }
 
         //暫停處理引擎輸出
@@ -324,8 +336,8 @@ namespace AZUSA
 
         //處理引擎的輸出
         void Engine_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            string Data = System.Web.HttpUtility.UrlDecode(e.Data);
+        {   
+            string Data = Utils.UriDecode(e.Data);
 
             //如果是空白輸出, 不要理會
             //Ignore NULL and empty inputs that will crash the program
@@ -385,6 +397,7 @@ namespace AZUSA
                 //進行回傳
                 case "Return":
                     output = arg;
+                    RESPONDED = true;
                     return;
                 //這是用來讓進程取得 AZUSA 的 pid, 進程可以利用 pid 檢查 AZUSA 是否存活, 當 AZUSA 意外退出時, 進程可以檢查到並一併退出
                 case "GetAzusaPid":

@@ -307,16 +307,16 @@ namespace AZUSA
                 //暫存運算結果
                 string tmp;
 
-                //暫存轉換結果
-                bool chk;
+                ////暫存轉換結果
+                //bool chk;
 
                 //條件必須是一個合法表達式
                 //second the cond should be a valid expression and should be boolean
                 if (ExprParser.TryParse(cond, out tmp))
                 {
-                    //而且運算結果必須可以轉換成布林值
-                    if (Boolean.TryParse(tmp, out chk))
-                    {
+                    ////而且運算結果必須可以轉換成布林值 (not neccessarily, c.f. IsCond)
+                    //if (Boolean.TryParse(tmp, out chk))
+                    //{
                         //把第一行和最後一行去掉後的內容應該要是一個 block (歸遞定義)
                         //lastly the content should be a block
                         string[] content = new string[lines.Length - 2];
@@ -325,7 +325,7 @@ namespace AZUSA
                             content[i - 1] = lines[i];
                         }
                         return IsBlock(content);
-                    }
+                    //}
                 }
             }
             return false;
